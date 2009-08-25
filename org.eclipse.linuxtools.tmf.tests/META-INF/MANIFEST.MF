@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Test
+Bundle-SymbolicName: org.eclipse.linuxtools.tmf.tests
+Bundle-Version: 0.0.1
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-Vendor: Eclipse
+Require-Bundle: org.junit4;bundle-version="4.5.0"
+Import-Package: org.eclipse.linuxtools.tmf.event,
+ org.eclipse.linuxtools.tmf.eventlog
