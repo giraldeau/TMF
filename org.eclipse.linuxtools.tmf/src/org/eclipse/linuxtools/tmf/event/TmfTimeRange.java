@@ -7,7 +7,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  * 
  * Contributors:
- *   Francois Chouinard (fchouinard@gmail.com) - Initial API and implementation
+ *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
 package org.eclipse.linuxtools.tmf.event;
@@ -17,7 +17,7 @@ package org.eclipse.linuxtools.tmf.event;
  * <p>
  * A utility class to define time ranges.
  */
-public class TmfTimeWindow {
+public class TmfTimeRange {
 
     // ========================================================================
     // Attributes
@@ -34,7 +34,7 @@ public class TmfTimeWindow {
 	 * @param startTime
 	 * @param endTime
 	 */
-	public TmfTimeWindow(TmfTimestamp startTime, TmfTimestamp endTime) {
+	public TmfTimeRange(TmfTimestamp startTime, TmfTimestamp endTime) {
 		fStartTime = startTime;
 		fEndTime   = endTime;
 	}
@@ -56,4 +56,20 @@ public class TmfTimeWindow {
 	public TmfTimestamp getEndTime() {
 		return fEndTime;
 	}
+
+    // ========================================================================
+    // Predicates
+    // ========================================================================
+
+	/**
+	 * Check if the timestamp is within the time range
+	 * 
+	 * @param ts
+	 * @return
+	 */
+	public boolean contains(TmfTimestamp ts) {
+		boolean result = (fStartTime.compareTo(ts, true) <= 0) && (fEndTime.compareTo(ts, true) >= 0);
+		return result;
+	}
+
 }

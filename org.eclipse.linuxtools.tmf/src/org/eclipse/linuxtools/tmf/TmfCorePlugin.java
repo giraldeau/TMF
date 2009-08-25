@@ -10,52 +10,69 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf.event;
+package org.eclipse.linuxtools.tmf;
+
+import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.osgi.framework.BundleContext;
 
 /**
- * <b><u>TmfEventField</u></b>
+ * <b><u>TmfCorePlugin</u></b>
  * <p>
- * A basic event field.
+ * The activator class controls the plug-in life cycle
  */
-public class TmfEventField {
+public class TmfCorePlugin extends AbstractUIPlugin {
 
     // ========================================================================
     // Attributes
     // ========================================================================
 
-    private final Object fValue;
+	// The plug-in ID
+	public static final String PLUGIN_ID = "org.eclipse.linuxtools.tmf";
 
+	// The shared instance
+	private static TmfCorePlugin plugin;
+	
     // ========================================================================
     // Constructors
     // ========================================================================
 
-    /**
-     * @param value
-     */
-    public TmfEventField(Object value) {
-        fValue = value;
-    }
+	/**
+	 * The constructor
+	 */
+	public TmfCorePlugin() {
+	}
 
     // ========================================================================
     // Accessors
     // ========================================================================
 
     /**
-     * @return
+     * @return the shared instance
      */
-    public Object getValue() {
-        return fValue;
+    public static TmfCorePlugin getDefault() {
+        return plugin;
     }
 
     // ========================================================================
     // Operators
     // ========================================================================
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#toString()
-     */
-    public String toString() {
-        return fValue.toString();
-    }
+	/*
+	 * (non-Javadoc)
+	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
+	 */
+	public void start(BundleContext context) throws Exception {
+		super.start(context);
+		plugin = this;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
+	 */
+	public void stop(BundleContext context) throws Exception {
+		plugin = null;
+		super.stop(context);
+	}
 
 }
