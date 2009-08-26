@@ -7,32 +7,29 @@
  * http://www.eclipse.org/legal/epl-v10.html
  * 
  * Contributors:
- *   Francois Chouinard (fchouinard@gmail.com) - Initial API and implementation
+ *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf.eventlog;
+package org.eclipse.linuxtools.tmf.request;
 
-import java.util.Vector;
-
-import org.eclipse.linuxtools.tmf.event.TmfEvent;
 import org.eclipse.linuxtools.tmf.event.TmfTimeRange;
 
 /**
- * <b><u>TmfEventRequest</u></b>
+ * <b><u>TmfDataRequest</u></b>
  * <p>
- * TmfEventRequests are used to obtain blocks of contiguous events from an
- * event stream, either all the events within a given time window or n events
- * starting a a specific timestamp. Open ranges can be used, especially for
+ * TmfDataRequests are used to obtain blocks of contiguous data from a data
+ * provider, either all the data within a given time window or n elements
+ * starting at a specific timestamp. Open ranges can be used, especially for
  * continuous streaming.
  * <p>
  * The request is processed asynchronously by an ITmfRequestProcessor and,
- * as blocks of events become available, the callback function newEvents()
- * is invoked, synchronously, for each block. When returning from newEvents(),
- * the event instances go out of scope and become eligible for gc. It is
+ * as blocks of data become available, the callback handlePartialData() is
+ * invoked, synchronously, for each block. When returning from the callback,
+ * the data instances go out of scope and become eligible for gc. It is
  * is thus the responsibility of the requester to either copy or keep a
- * reference to the events it wishes to track specifically.
+ * reference to the data it wishes to track specifically.
  * <p>
- * This event block approach is necessary to avoid  busting the heap for very
+ * This data block approach is necessary to avoid  busting the heap for very
  * large trace files. The block size is configurable.
  * <p>
  * The ITmfRequestProcessor indicates that the request is completed by
@@ -40,10 +37,11 @@ import org.eclipse.linuxtools.tmf.event.TmfTimeRange;
  * <p>
  * Typical usage:
  *<pre><code><i>TmfTimeWindow range = new TmfTimewindow(...);
- *TmfEventRequest request = new TmfEventRequest(range, 0, NB_EVENTS, BLOCK_SIZE) {
+ *TmfDataRequest&lt;DataType[]&gt; request = new TmfDataRequest&lt;DataType[]&gt;(range, 0, NB_EVENTS, BLOCK_SIZE) {
  *    &#64;Override
- *    public void newEvents(Vector&lt;TmfEvent&gt; events) {
- *         for (TmfEvent e : events) {
+ *    public void handlePartialResult() {
+ *         DataType[] data = request.getData();
+ *         for (DataType e : data) {
  *             // do something
  *         }
  *    }
@@ -53,9 +51,10 @@ import org.eclipse.linuxtools.tmf.event.TmfTimeRange;
  *
  * TODO: Consider extending DataRequestMonitor from DSF concurrency plugin.
  * The main issue is the slicing of the result in blocks and continuous
- * streams.
+ * streams. This would require using a thread executor and to carefully
+ * look at setData() and getData().
  */
-public class TmfEventRequest {
+public class TmfDataRequest<V> {
 
     // ========================================================================
     // Constants
@@ -64,42 +63,68 @@ public class TmfEventRequest {
     // The default maximum number of events per chunk
     public static final int DEFAULT_BLOCK_SIZE = 1000;
 
+    // The request count for all the events
+    public static final int ALL_EVENTS = -1;
+    
     // ========================================================================
     // Attributes
     // ========================================================================
 
     private final TmfTimeRange fRange;     // The requested events timestamp range
+    private final int  fIndex;              // The event index to get
     private final long fOffset;             // The synchronization offset to apply
-    private final int  fNbRequestedEvents;  // The number of events to read (-1 == the whole range)
+    private final int  fNbRequestedItems;   // The number of items to read (-1 == the whole range)
     private final int  fBlockSize;          // The maximum number of events per chunk
 
     private Object lock = new Object();
     private boolean fRequestCompleted = false;
     private boolean fRequestCanceled  = false;
 
+    private V[] fData;	// Data object
+    
     // ========================================================================
     // Constructors
     // ========================================================================
 
     /**
-     * @param range
-     * @param offset
+     * @param index
      * @param nbEvents
      */
-    public TmfEventRequest(TmfTimeRange range, long offset, int nbEvents) {
-        this(range, offset, nbEvents, DEFAULT_BLOCK_SIZE);
+    public TmfDataRequest(int index, long offset, int nbEvents) {
+        this(null, index, offset, nbEvents, DEFAULT_BLOCK_SIZE);
     }
 
     /**
      * @param range
      * @param offset
      * @param nbEvents
+     */
+    public TmfDataRequest(TmfTimeRange range, long offset, int nbEvents) {
+        this(range, 0, offset, nbEvents, DEFAULT_BLOCK_SIZE);
+    }
+
+    /**
+     * @param range
+     * @param offset
+     * @param nbItems
      * @param maxBlockSize Size of the largest blocks expected
      */
-    public TmfEventRequest(TmfTimeRange range, long offset, int nbEvents, int maxBlockSize) {
+    public TmfDataRequest(TmfTimeRange range, long offset, int nbEvents, int maxBlockSize) {
+        this(range, 0, offset, nbEvents, maxBlockSize);
+    }
+
+    /**
+     * @param range
+     * @param index
+     * @param offset
+     * @param nbItems
+     * @param maxBlockSize Size of the largest blocks expected
+     */
+    public TmfDataRequest(TmfTimeRange range, int index, long offset, int nbEvents, int maxBlockSize) {
         fRange = range;
+        fIndex = index;
         fOffset = offset;
-        fNbRequestedEvents = nbEvents;
+        fNbRequestedItems = nbEvents;
         fBlockSize = maxBlockSize;
     }
 
@@ -115,6 +140,13 @@ public class TmfEventRequest {
     }
 
     /**
+     * @return the index
+     */
+    public int getIndex() {
+        return fIndex;
+    }
+
+    /**
      * @return the offset
      */
     public long getOffset() {
@@ -124,8 +156,8 @@ public class TmfEventRequest {
     /**
      * @return the number of requested events (-1 = all)
      */
-    public int getNbRequestedEvents() {
-        return fNbRequestedEvents;
+    public int getNbRequestedItems() {
+        return fNbRequestedItems;
     }
 
     /**
@@ -153,21 +185,40 @@ public class TmfEventRequest {
     // Operators
     // ========================================================================
 
+    /** 
+     * Sets the data object to specified value.  To be called by the 
+     * asynchronous method implementor.
+     * @param data Data value to set.
+     */
+    public synchronized void setData(V[] data) {
+    	fData = data;
+    }
+    
     /**
-     * newEvents()
+     * Returns the data value, null if not set.
+     */
+    public synchronized V[] getData() {
+    	return fData;
+    }
+    
+    /**
+     * handlePartialResult()
      * 
-     * - Events are received in the order they appear in the stream.
+     * - Data items are received in the order they appear in the stream.
      * - Called by the request processor, in its execution thread, every time a
-     *   block of events becomes available.
-     * - Request processor performs a synchronous call to newEvents()
-     *   i.e. its execution threads holds until newEvents() returns.
-     * - Original events are disposed of on return i.e. keep a reference (or a 
-     *   copy) if some persistence is needed between invocations.
-     * - When there are no more events, 
+     *   block of data becomes available.
+     * - Request processor performs a synchronous call to handlePartialResult()
+     *   i.e. its execution threads holds until handlePartialData() returns.
+     * - Original data items are disposed of on return i.e. keep a reference
+     *   (or a copy) if some persistence is needed between invocations.
+     * - When there is no more data, done() is called. 
      *
      * @param events - an array of events
      */
-    public void newEvents(Vector<TmfEvent> events) {
+    public void handlePartialResult() {
+    }
+
+    public void handleCompleted() {
     }
 
     /**
@@ -195,6 +246,7 @@ public class TmfEventRequest {
             fRequestCompleted = true;
             lock.notify();
         }
+        handleCompleted();
     }
 
     /**

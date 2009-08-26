@@ -7,13 +7,15 @@
  * http://www.eclipse.org/legal/epl-v10.html
  * 
  * Contributors:
- *   Francois Chouinard (fchouinard@gmail.com) - Initial API and implementation
+ *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf.eventlog;
+package org.eclipse.linuxtools.tmf.trace;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.Vector;
 
 import org.eclipse.linuxtools.tmf.event.TmfEvent;
 import org.eclipse.linuxtools.tmf.event.TmfEventContent;
@@ -22,6 +24,8 @@ import org.eclipse.linuxtools.tmf.event.TmfEventReference;
 import org.eclipse.linuxtools.tmf.event.TmfEventSource;
 import org.eclipse.linuxtools.tmf.event.TmfEventType;
 import org.eclipse.linuxtools.tmf.event.TmfTimestamp;
+import org.eclipse.linuxtools.tmf.stream.ITmfEventParser;
+import org.eclipse.linuxtools.tmf.stream.ITmfEventStream;
 
 /**
  * <b><u>TmfEventParserStub</u></b>
@@ -34,6 +38,7 @@ public class TmfEventParserStub implements ITmfEventParser {
     // Attributes
     // ========================================================================
 
+	private final int NB_FORMATS = 10;
     private final TmfEventFormat[] fFormats;
 
     // ========================================================================
@@ -41,18 +46,16 @@ public class TmfEventParserStub implements ITmfEventParser {
     // ========================================================================
 
     public TmfEventParserStub() {
-        fFormats = new TmfEventFormat[] {
-                new TmfEventFormat(new String[] { "Fmt1-Fld-1" }),
-                new TmfEventFormat(new String[] { "Fmt2-Fld-1", "Fmt2-Fld-2" }),
-                new TmfEventFormat(new String[] { "Fmt3-Fld-1", "Fmt3-Fld-2", "Fmt3-Fld-3" }),
-                new TmfEventFormat(new String[] { "Fmt4-Fld-1", "Fmt4-Fld-2", "Fmt4-Fld-3", "Fmt4-Fld-4" }),
-                new TmfEventFormat(new String[] { "Fmt5-Fld-1", "Fmt5-Fld-2", "Fmt5-Fld-3", "Fmt5-Fld-4", "Fmt5-Fld-5" }),
-        };
+    	fFormats = new TmfEventFormat[NB_FORMATS];
+    	for (int i = 0; i < NB_FORMATS; i++) {
+    		Vector<String> format = new Vector<String>();
+    		for (int j = 1; j <= i; j++) {
+    			format.add(new String("Fmt-" + i + "-Fld-" + j));
+    		}
+    		String[] fields = new String[i];
+    		fFormats[i] = new TmfEventFormat(format.toArray(fields));
+    	}
     }
-
-    // ========================================================================
-    // Accessors
-    // ========================================================================
 
     // ========================================================================
     // Operators
@@ -62,19 +65,32 @@ public class TmfEventParserStub implements ITmfEventParser {
      * @see org.eclipse.linuxtools.tmf.eventlog.ITmfEventParser#parseNextEvent()
      */
     static final String typePrefix = "Type-";
-    public TmfEvent getNextEvent(TmfEventStream stream) throws IOException {
+    public TmfEvent getNextEvent(ITmfEventStream eventStream) throws IOException {
+
+        if (! (eventStream instanceof TmfEventStreamStub)) {
+            return null;
+        }
+
+        RandomAccessFile stream = ((TmfEventStreamStub) eventStream).getStream();
+
         try {
             long ts        = stream.readLong();
             String source  = stream.readUTF();
             String type    = stream.readUTF();
             int reference  = stream.readInt();
             int typeIndex  = Integer.parseInt(type.substring(typePrefix.length()));
-            String[] content = new String[typeIndex];
-            for (int i = 0; i < typeIndex; i ++) {
-                content[i] = stream.readUTF();
+            String[] fields = new String[typeIndex];
+            for (int i = 0; i < typeIndex; i++) {
+                fields[i] = stream.readUTF();
             }
+            String content = "[";
+            for (int i = 0; i < typeIndex - 1; i++) {
+                content += fields[i] + ", ";
+            }
+            content += "]";
+            
             TmfEvent event = new TmfEvent(
-                    new TmfTimestamp(ts, (byte) 0, 0),
+                    new TmfTimestamp(ts, (byte) -3, 0),     // millisecs
                     new TmfEventSource(source),
                     new TmfEventType(type, fFormats[typeIndex]),
                     new TmfEventContent(content, fFormats[typeIndex]),
