@@ -10,23 +10,16 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf.request;
+package org.eclipse.linuxtools.tmf.event;
 
 /**
- * <b><u>ITmfRequestHandler</u></b>
+ * <b><u>TmfData</u></b>
+ * <p>
+ * This is just an empty base class for the data meant to navigate in the
+ * framework.
  * <p>
  * TODO: Implement me. Please.
- * @param <V>
  */
-public interface ITmfRequestHandler<T> {
-
-    /**
-     * Process the request. The client thread can be suspended until the 
-     * request is completed (e.g. for a specific range of events) or it
-     * can choose to process the events asynchronously (e.g. for streaming).
-     * 
-     * @param waitForCompletion Suspend the client thread until the request completes 
-     */
-    public void processRequest(TmfDataRequest<T> request, boolean waitForCompletion);
+public abstract class TmfData {
 
 }
