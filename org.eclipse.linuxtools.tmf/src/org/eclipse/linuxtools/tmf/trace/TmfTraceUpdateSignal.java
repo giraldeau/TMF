@@ -10,13 +10,25 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf;
+package org.eclipse.linuxtools.tmf.trace;
+
+import org.eclipse.linuxtools.tmf.signal.TmfSignal;
 
 /**
- * <b><u>TmfViewer</u></b>
+ * <b><u>TmfTraceUpdateEvent</u></b>
  * <p>
  * TODO: Implement me. Please.
  */
-public class TmfViewer extends TmfComponent {
+public class TmfTraceUpdateSignal extends TmfSignal {
 
+	private final TmfTrace fTrace;
+	
+	public TmfTraceUpdateSignal(Object source, TmfTrace trace) {
+		super(source);
+		fTrace = trace;
+	}
+
+	public TmfTrace getTrace() {
+		return fTrace;
+	}
 }

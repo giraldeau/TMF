@@ -10,18 +10,25 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf;
+package org.eclipse.linuxtools.tmf.trace;
+
+import org.eclipse.linuxtools.tmf.signal.TmfSignal;
 
 /**
- * <b><u>TmfTransform</u></b>
+ * <b><u>TmfTraceSelectedEvent</u></b>
  * <p>
  * TODO: Implement me. Please.
  */
-public abstract class TmfTransform extends TmfComponent {
+public class TmfTraceSelectedSignal extends TmfSignal {
 
-	/**
-	 * 
-	 */
-	public void transformData() {
+	private final TmfTrace fTrace;
+	
+	public TmfTraceSelectedSignal(Object source, TmfTrace trace) {
+		super(source);
+		fTrace = trace;
+	}
+
+	public TmfTrace getTrace() {
+		return fTrace;
 	}
 }

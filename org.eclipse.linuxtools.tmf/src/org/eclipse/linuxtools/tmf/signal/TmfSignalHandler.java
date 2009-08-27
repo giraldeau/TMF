@@ -10,13 +10,20 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf;
+package org.eclipse.linuxtools.tmf.signal;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * <b><u>TmfComponent</u></b>
+ * <b><u>TmfSignalHandler</u></b>
  * <p>
- * TODO: Implement me. Please.
+ * Marker for TMF signal handlers.
  */
-public abstract class TmfComponent {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface TmfSignalHandler {
 
 }
