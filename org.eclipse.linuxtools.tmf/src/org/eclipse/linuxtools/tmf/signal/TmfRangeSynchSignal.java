@@ -10,25 +10,33 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf.stream;
+package org.eclipse.linuxtools.tmf.signal;
 
-import org.eclipse.linuxtools.tmf.signal.TmfSignal;
+import org.eclipse.linuxtools.tmf.event.TmfTimeRange;
+import org.eclipse.linuxtools.tmf.event.TmfTimestamp;
 
 /**
- * <b><u>TmfStreamUpdateEvent</u></b>
+ * <b><u>TmfRangeSynchSignal</u></b>
  * <p>
  * TODO: Implement me. Please.
  */
-public class TmfStreamUpdateSignal extends TmfSignal {
+public class TmfRangeSynchSignal extends TmfSignal {
 
-	private final ITmfEventStream fEventStream;
-	
-	public TmfStreamUpdateSignal(Object source, ITmfEventStream stream) {
+	private final TmfTimeRange fCurrentRange;
+	private final TmfTimestamp fCurrentTime;
+
+	public TmfRangeSynchSignal(Object source, TmfTimeRange range, TmfTimestamp ts) {
 		super(source);
-		fEventStream = stream;
+		fCurrentRange = range;
+		fCurrentTime = ts;
 	}
 
-	public ITmfEventStream getEventStream() {
-		return fEventStream;
+	public TmfTimeRange getCurrentRange() {
+		return fCurrentRange;
 	}
+
+	public TmfTimestamp getCurrentTime() {
+		return fCurrentTime;
+	}
+
 }
