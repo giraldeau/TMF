@@ -10,15 +10,20 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf.ui.viewer;
+package org.eclipse.linuxtools.tmf.ui.views;
 
 import org.eclipse.linuxtools.tmf.event.TmfEvent;
+import org.eclipse.linuxtools.tmf.event.TmfTimestamp;
 import org.eclipse.linuxtools.tmf.request.TmfDataRequest;
 import org.eclipse.linuxtools.tmf.signal.TmfSignalHandler;
+import org.eclipse.linuxtools.tmf.signal.TmfSignalManager;
+import org.eclipse.linuxtools.tmf.signal.TmfTimeSynchSignal;
+import org.eclipse.linuxtools.tmf.stream.TmfStreamUpdatedSignal;
 import org.eclipse.linuxtools.tmf.trace.TmfTrace;
 import org.eclipse.linuxtools.tmf.trace.TmfTraceSelectedSignal;
-import org.eclipse.linuxtools.tmf.trace.TmfTraceUpdateSignal;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
@@ -33,6 +38,7 @@ import org.eclipse.swt.widgets.TableItem;
  *
  * TODO: Implement me. Please.
  * TODO: Handle column selection, sort, ... generically (nothing less...)
+ * TODO: Implement hide/display columns
  */
 public class TmfEventsView extends TmfViewer {
 
@@ -92,10 +98,12 @@ public class TmfEventsView extends TmfViewer {
     /* (non-Javadoc)
      * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
      */
-    public void createPartControl(Composite parent) {
+    @Override
+	public void createPartControl(Composite parent) {
     	
     	// Create a virtual table
-        final int style = SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER | SWT.VIRTUAL;
+    	// TODO: change SINGLE to MULTI line selection and adjust the selection listener
+        final int style = SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER | SWT.VIRTUAL;
         fTable = new Table(parent, style);
 
         // Set the table layout
@@ -111,12 +119,38 @@ public class TmfEventsView extends TmfViewer {
         setColumnHeaders(fTable);
 
         // Handle the table item requests 
+        fTable.addSelectionListener(new SelectionListener() {
+
+			public void widgetDefaultSelected(SelectionEvent e) {
+				// TODO Auto-generated method stub
+			}
+
+			public void widgetSelected(SelectionEvent e) {
+				// Get the timestamp string
+				String time = fTable.getSelection()[0].getText();
+
+				// Compose a timestamp
+				int pos = time.indexOf('.');
+				String integer = time.substring(0, pos);
+				String fraction = time.substring(pos + 1);
+
+				byte exponent = (byte) -fraction.length();
+				String value = integer + fraction;
+				TmfTimestamp ts = new TmfTimestamp(new Long(value), exponent);
+
+				// Generate the synchronization event
+				TmfSignalManager.dispatchSignal(new TmfTimeSynchSignal(fTable, ts));
+			}
+        });
+
+        // Handle the table item requests 
         fTable.addListener(SWT.SetData, new Listener() {
 			public void handleEvent(Event event) {
 				TableItem item = (TableItem) event.item;
 				int index = fTable.indexOf(item);
 				final TmfEvent[] evt = new TmfEvent[1];
 				TmfDataRequest<TmfEvent> request = new TmfDataRequest<TmfEvent>(index, 0, 1) {
+					@Override
 					public void handleData() {
 						TmfEvent[] result = getData();
 						evt[0] = (result.length > 0) ? result[0] : null;
@@ -126,6 +160,7 @@ public class TmfEventsView extends TmfViewer {
 				item.setText(extractItemFields(evt[0]));
 			}
         });
+
         fTable.setItemCount(0);
     }
 
@@ -165,7 +200,8 @@ public class TmfEventsView extends TmfViewer {
     /* (non-Javadoc)
      * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
      */
-    public void setFocus() {
+    @Override
+	public void setFocus() {
     }
 
     // ========================================================================
@@ -174,15 +210,22 @@ public class TmfEventsView extends TmfViewer {
     
 	@TmfSignalHandler
     public void traceSelected(TmfTraceSelectedSignal signal) {
-    	// Update the trace reference
+		// Update the trace reference
+		if (fTrace != null)
+			fTrace.dispose();
     	fTrace = signal.getTrace();
-    	// Update the table
-    	fTable.clearAll();
-    	fTable.setItemCount(fTrace.getNbEvents());        
+
+        // Perform the updates on the UI thread
+        fTable.getDisplay().asyncExec(new Runnable() {
+        	public void run() {
+            	fTable.clearAll();
+            	fTable.setItemCount(fTrace.getNbEvents());        
+        	}
+        });
     }
 
 	@TmfSignalHandler
-    public void traceUpdated(TmfTraceUpdateSignal signal) {
+    public void traceUpdated(TmfStreamUpdatedSignal signal) {
         // Perform the refresh on the UI thread
     	fTable.getDisplay().asyncExec(new Runnable() {
 			public void run() {
@@ -191,6 +234,19 @@ public class TmfEventsView extends TmfViewer {
 				}
 			}
         });
+    }
+
+    @TmfSignalHandler
+    public void currentTimeUpdated(TmfTimeSynchSignal signal) {
+    	if (signal.getSource() != fTable) {
+    		final int index = fTrace.getIndex(signal.getCurrentTime());
+            // Perform the updates on the UI thread
+            fTable.getDisplay().asyncExec(new Runnable() {
+            	public void run() {
+            		fTable.setSelection(index);
+            	}
+            });
+    	}
     }
 
 }
