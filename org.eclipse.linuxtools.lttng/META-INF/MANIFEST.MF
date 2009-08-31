@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: LTTng
+Bundle-SymbolicName: org.eclipse.linuxtools.lttng
+Bundle-Version: 0.0.1
+Bundle-Activator: org.eclipse.linuxtools.lttng.LTTngCorePlugin
+Bundle-Vendor: Eclipse
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.linuxtools.tmf;bundle-version="0.0.1"
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-ActivationPolicy: lazy
