@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         id="org,eclipse.linuxtools.lttng.ui.perspective"
+         name="LTTng Perspective"
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="org.eclipse.linuxtools.lttng.ui.views.PerspectiveFactory"
+            icon="icons/garland32.png"
+            id="org.eclipse.linuxtools.lttng.ui.perspective"
+            name="LTTng">
+      </perspective>
+   </extension>
+   <extension
+         id="org.eclipse.linuxtools.lttng.ui.views"
+         name="LTTng Views"
+         point="org.eclipse.ui.views">
+      <category
+            id="org.eclipse.linuxtools.lttng.ui.views.category"
+            name="LTTng">
+      </category>
+      <view
+            allowMultiple="false"
+            category="org.eclipse.linuxtools.lttng.ui.views.category"
+            class="org.eclipse.linuxtools.lttng.ui.views.project.ProjectView"
+            icon="icons/project_view.gif"
+            id="org.eclipse.linuxtools.lttng.ui.views.project"
+            name="Project"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="false"
+            category="org.eclipse.linuxtools.lttng.ui.views.category"
+            class="org.eclipse.linuxtools.lttng.ui.views.control.ControlView"
+            icon="icons/control_view.gif"
+            id="org.eclipse.linuxtools.lttng.ui.views.control"
+            name="Control"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="false"
+            category="org.eclipse.linuxtools.lttng.ui.views.category"
+            class="org.eclipse.linuxtools.lttng.ui.views.events.EventsView"
+            icon="icons/events_view.gif"
+            id="org.eclipse.linuxtools.lttng.ui.views.events"
+            name="Events"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="false"
+            category="org.eclipse.linuxtools.lttng.ui.views.category"
+            class="org.eclipse.linuxtools.lttng.ui.views.timeframe.TimeFrameView"
+            icon="icons/time_frame_view.gif"
+            id="org.eclipse.linuxtools.lttng.ui.views.timeframe"
+            name="Time Frame"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="false"
+            category="org.eclipse.linuxtools.lttng.ui.views.category"
+            class="org.eclipse.linuxtools.lttng.ui.views.controlflow.ControlFlowView"
+            icon="icons/control_flow_view.gif"
+            id="org.eclipse.linuxtools.lttng.ui.views.controlflow"
+            name="Control Flow"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="false"
+            category="org.eclipse.linuxtools.lttng.ui.views.category"
+            class="org.eclipse.linuxtools.lttng.ui.views.resources.ResourcesView"
+            icon="icons/resources_view.gif"
+            id="org.eclipse.linuxtools.lttng.ui.views.resources"
+            name="Resources"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="false"
+            category="org.eclipse.linuxtools.lttng.ui.views.category"
+            class="org.eclipse.linuxtools.lttng.ui.views.statistics.StatisticsView"
+            icon="icons/statistics_view.gif"
+            id="org.eclipse.linuxtools.lttng.ui.views.statistics"
+            name="Statistics"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="false"
+            category="org.eclipse.linuxtools.lttng.ui.views.category"
+            class="org.eclipse.linuxtools.lttng.ui.views.histogram.HistogramView"
+            icon="icons/histogram.gif"
+            id="org.eclipse.linuxtools.lttng.ui.views.histogram"
+            name="Histogram"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         id="org.eclipse.linuxtools.lttng.wizards.new"
+         name="LTTng New Wizards"
+         point="org.eclipse.ui.newWizards">
+      <category
+            id="org.eclipse.linuxtools.lttng.ui.wizards.new"
+            name="LTTng">
+      </category>
+      <wizard
+            category="org.eclipse.linuxtools.lttng.ui.wizards.new"
+            class="org.eclipse.linuxtools.lttng.ui.views.project.NewProjectWizard"
+            finalPerspective="org.eclipse.linuxtools.lttng.ui.perspective"
+            icon="icons/garland32.png"
+            id="org.eclipse.linuxtools.lttng.ui.views.ui.wizards.newProject"
+            name="LTTng Project"
+            project="true">
+         <description>
+            Create a new LTTng project
+         </description>
+      </wizard>
+   </extension>
+   <extension
+         id="org.eclipse.linuxtools.lttng.wizards.import"
+         name="LTTng Import Wizards"
+         point="org.eclipse.ui.importWizards">
+      <category
+            id="org.eclipse.linuxtools.lttng.ui.wizards.import"
+            name="LTTng">
+      </category>
+      <wizard
+            category="org.eclipse.linuxtools.lttng.ui.wizards.import"
+            class="org.eclipse.linuxtools.lttng.ui.views.project.ImportTraceWizard"
+            icon="icons/garland32.png"
+            id="org.eclipse.linuxtools.lttng.ui.wizards.importTrace"
+            name="LTTng Trace">
+         <description>
+            Import an existing LTTng trace file
+         </description>
+      </wizard>
+   </extension>
+
+</plugin>
