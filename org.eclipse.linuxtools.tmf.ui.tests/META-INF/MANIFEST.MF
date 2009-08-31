@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: TMF UI Tests
+Bundle-SymbolicName: org.eclipse.linuxtools.tmf.ui.tests
+Bundle-Version: 0.0.1
+Bundle-Vendor: Eclipse
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
