@@ -10,9 +10,7 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf.stream;
-
-import java.util.Map;
+package org.eclipse.linuxtools.tmf.trace;
 
 import org.eclipse.linuxtools.tmf.event.TmfEvent;
 import org.eclipse.linuxtools.tmf.event.TmfTimeRange;
@@ -23,11 +21,17 @@ import org.eclipse.linuxtools.tmf.event.TmfTimestamp;
  * <p>
  * TODO: Implement me. Please.
  */
-public interface ITmfEventStream {
+public interface ITmfTrace {
 
+	/**
+	 * <b><u>StreamContext</u></b>
+	 * <p>
+	 * Stream context keeper to avoid conflicting, concurrent accesses to the
+	 * underlying stream. 
+	 */
 	public class StreamContext {
-		Object location;
-		int index;
+		public Object location;
+		public int    index;
 
 		public StreamContext(Object loc, int ind) {
 			location = loc;
@@ -37,16 +41,30 @@ public interface ITmfEventStream {
 		public StreamContext(StreamContext other) {
 			if (other != null) {
 				location = other.location;
-				index    = other.index;
+				index = other.index;
 			}
 		}
 	}
     
+	/**
+	 * @return 
+	 */
+	public String getName();
+    
+	/**
+	 * @return the number of events in the stream
+	 */
 	public int getNbEvents();
     
+	/**
+	 * @return the stream time range
+	 */
     public TmfTimeRange getTimeRange();
 
-    public Map<String, Object> getAttributes();
+//	/**
+//	 * @return The stream time range
+//	 */
+//    public Map<String, Object> getAttributes();
 
     /**
      * Positions the stream at the first event with timestamp.
@@ -55,13 +73,6 @@ public interface ITmfEventStream {
      * @return a context object for subsequent reads
      */
     public StreamContext seekEvent(TmfTimestamp timestamp);
-
-    /**
-     * Positions the stream on the event at the wanted position.
-     * 
-     * @param index
-     * @return a context object for subsequent reads
-     */
     public StreamContext seekEvent(int index);
 
     /**
@@ -70,14 +81,14 @@ public interface ITmfEventStream {
      * 
      * @return the next event in the stream
      */
-    public TmfEvent getNextEvent(StreamContext context);
-
+    public TmfEvent peekEvent(StreamContext context);
     public TmfEvent getEvent(StreamContext context, TmfTimestamp timestamp);
     public TmfEvent getEvent(StreamContext context, int index);
+    public TmfEvent getNextEvent(StreamContext context);
 
     /**
      * Parse the stream and creates the checkpoint structure.
-     * Normally performed once at the creation of the event stream.
+     * Normally invoked once at the creation of the event stream.
      */
     public void indexStream(boolean waitForCompletion);
 
@@ -91,4 +102,12 @@ public interface ITmfEventStream {
      * @return
      */
 	public int getIndex(TmfTimestamp timestamp); 
+
+	/**
+	 * Returns the timestamp of the event at position [index]
+	 * 
+	 * @param index the event index
+	 * @return the corresponding timestamp
+	 */
+    public TmfTimestamp getTimestamp(int index);
 }
