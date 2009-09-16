@@ -22,12 +22,12 @@ import org.eclipse.ui.part.ViewPart;
  * <p>
  * TODO: Implement me. Please.
  */
-public abstract class TmfViewer extends ViewPart implements ITmfComponent {
+public abstract class TmfView extends ViewPart implements ITmfComponent {
 
 	/**
 	 * Constructor
 	 */
-	public TmfViewer() {
+	public TmfView() {
 		TmfSignalManager.addListener(this);
 	}
 
