@@ -32,12 +32,12 @@ import org.eclipse.linuxtools.tmf.event.TmfTimestamp;
 import org.eclipse.linuxtools.tmf.trace.TmfTrace;
 
 /**
- * <b><u>LttngEventStream</u></b>
+ * <b><u>LTTngTrace</u></b>
  * <p>
  * LTTng trace implementation. It accesses the C trace handling library
  * (seeking, reading and parsing) through the JNI component.
  */
-public class LttngEventStream extends TmfTrace {
+public class LTTngTrace extends TmfTrace {
 
 	private final static boolean IS_PARSING_NEEDED_DEFAULT = true;
 	private final static int     CHECKPOINT_PAGE_SIZE = 1000;
@@ -49,15 +49,30 @@ public class LttngEventStream extends TmfTrace {
     private JniTrace currentJniTrace = null;
     
     /**
-     * Constructor
+     * Default Constructor
      * <p>
      * @param path Path to a <b>directory</b> that contain an LTTng trace.
-     * @exception Exception Trace opening failed (FileNotFoundException)
+     * 
+     * @exception Exception Trace opening failed (most likely FileNotFoundException)
      * 
      * @see org.eclipse.linuxtools.lttng.jni.JniTrace
      */
-    public LttngEventStream(String path) throws Exception {
-        super(path, CHECKPOINT_PAGE_SIZE);
+    public LTTngTrace(String path) throws Exception {
+        this(path, true);
+    }
+    
+    /**
+     * Default constructor, with control over the indexing
+     * <p>
+     * @param path 					Path to a <b>directory</b> that contain an LTTng trace.
+     * @param waitForCompletion  	Should we wait for indexign to complete before moving on.
+     * 
+     * @exception Exception Trace opening failed (most likely FileNotFoundException)
+     * 
+     * @see org.eclipse.linuxtools.lttng.jni.JniTrace
+     */
+    public LTTngTrace(String path, boolean waitForCompletion) throws Exception {
+        super(path, CHECKPOINT_PAGE_SIZE, waitForCompletion);
         try {
             currentJniTrace = new JniTrace(path);
         }
@@ -72,7 +87,8 @@ public class LttngEventStream extends TmfTrace {
 	/* (non-Javadoc)
 	 * @see org.eclipse.linuxtools.tmf.trace.ITmfTrace#parseNextEvent()
 	 */
-	public synchronized TmfEvent parseNextEvent() {
+	@Override
+	public synchronized TmfEvent parseEvent() {
     	JniEvent jniEvent = currentJniTrace.readNextEvent();
     	currentLttngEvent = convertJniEventToTmf(jniEvent);
         return currentLttngEvent;
@@ -110,7 +126,7 @@ public class LttngEventStream extends TmfTrace {
      * @return  LttngEvent   The converted event
      * @see org.eclipse.linuxtools.lttng.jni.JniEvent
      */
-    public LttngEvent convertJniEventToTmf(JniEvent newEvent) {
+    private LttngEvent convertJniEventToTmf(JniEvent newEvent) {
     	LttngEvent event = null;
     	if (newEvent != null)
     		event = convertJniEventToTmf(newEvent, IS_PARSING_NEEDED_DEFAULT);
@@ -125,13 +141,12 @@ public class LttngEventStream extends TmfTrace {
      * @return  LttngEvent   The converted event
      * @see org.eclipse.linuxtools.lttng.jni.JniEvent
      */
-    // Conversion method to transform a JafEvent into a TmfEvent
-    public LttngEvent convertJniEventToTmf(JniEvent jniEvent, boolean isParsingNeeded) {
+    public LttngEvent convertJniEventToTmf(JniEvent jniEvent, boolean parsingIsNeeded) {
         LttngEventFormat eventFormat = new LttngEventFormat();
         String content = "";
         LttngEventField[] fields = null;
 
-        if (isParsingNeeded == true) {
+        if (parsingIsNeeded) {
             fields = eventFormat.parse(jniEvent.parseAllFields());
             for (int y = 0; y < fields.length; y++) {
                 content += fields[y].toString() + " ";
@@ -156,10 +171,17 @@ public class LttngEventStream extends TmfTrace {
     /**
      * Return location (timestamp) of our current position in the trace.
      * 
-     * @return LttngTimestamp The current Ltt timestamp, in long. Unit is nanosecond.
+     * @return LttngTimestamp The current LTT timestamp, in long. Unit is nanosecond.
      */
-    public Object getCurrentLocation() {
-        return new LttngTimestamp(currentJniTrace.getCurrentEventTimestamp().getTime());
+	public Object getCurrentLocation() {
+        LttngTimestamp returnedLocation = null;
+        JniEvent tmpJniEvent = currentJniTrace.findNextEvent();
+        
+        if (tmpJniEvent != null) {
+            returnedLocation = new LttngTimestamp(tmpJniEvent.getEventTime().getTime());
+        }
+        
+        return returnedLocation;
     }
     
     /**
@@ -168,7 +190,7 @@ public class LttngEventStream extends TmfTrace {
      * @param location  a LttngTimestamp of a position in the trace
      * @return StreamContext pointing to the current (after seek) position in the trace
      */
-    public TmfTraceContext seekLocation(Object location) {
+	public synchronized TmfTraceContext seekLocation(Object location) {
         
         // If location is null, interpret this as a request to get back to the beginning of the trace
         // Change the location, the seek will happen below
@@ -176,22 +198,33 @@ public class LttngEventStream extends TmfTrace {
     		location = getStartTime();
     	}
     	
-        TmfTraceContext context = null;
     	if (location instanceof LttngTimestamp) {
     		long value = ((LttngTimestamp) location).getValue();
     		if (value != currentJniTrace.getCurrentEventTimestamp().getTime()) {
     			currentJniTrace.seekToTime(new JniTime(value));
-    			context = new TmfTraceContext(new LttngTimestamp(currentJniTrace.getCurrentEventTimestamp().getTime()), 0);
     		}
     	}
-    	
-        return context;
-    }
-    
-    
-    // !!! THIS MAIN IS FOR TESTING ONLY !!!
-    public static void main(String[] args) {
+    	else {
+    	    System.out.println("ERROR : Location not instance of TmfTimestamp");
+    	}
 
+    	LttngTimestamp ts = (LttngTimestamp) getCurrentLocation();
+        return new TmfTraceContext(ts, ts, 0);
+	}
+
+	   public String toString() {
+	    	String result="";
+
+	    	result += "Path :" + getPath() + " ";
+	    	result += "Trace:" + currentJniTrace + " ";
+	    	result += "Event:" + currentLttngEvent;
+	    	
+	    	return result;
+	    }
+	    
+//    // !!! THIS MAIN IS FOR TESTING ONLY !!!
+//    public static void main(String[] args) {
+//
 //        LttngEventStream testStream = null;
 //        try {
 //            testStream = new LttngEventStream("/home/william/trace1");
@@ -243,7 +276,7 @@ public class LttngEventStream extends TmfTrace {
 //        } catch (Exception e) {
 //            System.out.println("FAILED WITH : " + e.getMessage() + "\n");
 //        }
-
-    }
+//
+//    }
 
 }
