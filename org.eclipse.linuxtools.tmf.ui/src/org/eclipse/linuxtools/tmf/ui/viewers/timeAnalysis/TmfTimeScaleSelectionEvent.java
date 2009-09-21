@@ -14,7 +14,7 @@ package org.eclipse.linuxtools.tmf.ui.viewers.timeAnalysis;
 
 import java.util.EventObject;
 
-public class TmfTimeTimeScaleSelectionEvent extends EventObject {
+public class TmfTimeScaleSelectionEvent extends EventObject {
 
 	/**
 	 * 
@@ -39,7 +39,7 @@ public class TmfTimeTimeScaleSelectionEvent extends EventObject {
 	 * @param selTime
 	 *            carries the selected time if available otherwise is 0
 	 */
-	public TmfTimeTimeScaleSelectionEvent(Object arg0, long time0, long time1,
+	public TmfTimeScaleSelectionEvent(Object arg0, long time0, long time1,
 			int width, long selTime) {
 		super(arg0);
 		this.time0 = time0;
