@@ -12,12 +12,21 @@
 
 package org.eclipse.linuxtools.tmf.component;
 
+import org.eclipse.linuxtools.tmf.signal.TmfSignalManager;
+
 /**
- * <b><u>ITmfComponent</u></b>
+ * <b><u>TmfComponent</u></b>
  * <p>
  * TODO: Implement me. Please.
  */
-public interface ITmfComponent {
+public abstract class TmfComponent implements ITmfComponent {
 
-	public void dispose();
+	public TmfComponent() {
+		TmfSignalManager.addListener(this);
+	}
+
+	public void dispose() {
+		TmfSignalManager.removeListener(this);
+	}
+
 }
