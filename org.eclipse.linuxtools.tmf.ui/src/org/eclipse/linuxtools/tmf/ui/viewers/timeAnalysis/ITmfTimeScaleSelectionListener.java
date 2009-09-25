@@ -19,6 +19,6 @@ import java.util.EventListener;
  * upon registration
  * 
  */
-public interface ITmfTimeTimeScaleSelectionListener extends EventListener {
+public interface ITmfTimeScaleSelectionListener extends EventListener {
 	public void tsfTmProcessTimeScaleEvent(TmfTimeScaleSelectionEvent event);
 }
