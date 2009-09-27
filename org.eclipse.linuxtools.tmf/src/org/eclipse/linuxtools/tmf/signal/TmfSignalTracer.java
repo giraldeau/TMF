@@ -13,14 +13,26 @@
 package org.eclipse.linuxtools.tmf.signal;
 
 /**
- * <b><u>TmfSignalTrace</u></b>
+ * <b><u>TmfSignalTracer</u></b>
  * <p>
- * TODO: Activate the tracing from a preference
+ * This object (singleton) traces all TmfSignals in the application.
  */
-public class TmfSignalTrace {
+public class TmfSignalTracer {
+
+	static TmfSignalTracer fInstance;
+
+	static public TmfSignalTracer getInstance() {
+		if (fInstance == null) {
+			fInstance = new TmfSignalTracer();
+		}
+		return fInstance;
+	}
+
+	private TmfSignalTracer() {
+	}
 
 	@TmfSignalHandler
 	public void traceSignal(TmfSignal signal) {
-		System.out.println(signal.getSource().toString() + ": " + signal.getClass().toString());
+		System.out.println(signal.getSource().toString() + ": " + signal.toString());
 	}
 }
