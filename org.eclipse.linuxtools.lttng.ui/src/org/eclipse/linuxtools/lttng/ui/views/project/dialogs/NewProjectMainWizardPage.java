@@ -10,7 +10,7 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.lttng.ui.views.project;
+package org.eclipse.linuxtools.lttng.ui.views.project.dialogs;
 
 import org.eclipse.ui.dialogs.WizardNewProjectCreationPage;
 

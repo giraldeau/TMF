@@ -10,7 +10,7 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.lttng.ui.views.project;
+package org.eclipse.linuxtools.lttng.ui.views.project.dialogs;
 
 import java.net.URI;
 
@@ -25,6 +25,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.linuxtools.lttng.ui.LTTngUiPlugin;
+import org.eclipse.linuxtools.lttng.ui.views.project.LTTngProjectNature;
 import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard;
 
 /**
@@ -118,6 +119,10 @@ public class NewProjectWizard extends BasicNewResourceWizard {
 
             if (!project.isOpen())
                 project.open(monitor);
+
+            IProjectDescription description = project.getDescription();
+            description.setNatureIds(new String[] { LTTngProjectNature.ID } );
+            project.setDescription(description, null);
 
             IFolder folder = project.getFolder("Traces");
             if (!folder.exists())
