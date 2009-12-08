@@ -13,11 +13,18 @@
 package org.eclipse.linuxtools.tmf.event;
 
 /**
- * <b><u>ITmfContentParser</u></b>
+ * <b><u>TmfNoSuchFieldException</u></b>
  * <p>
- * Event content parser.
+ * TODO: Implement me. Please.
  */
-public interface ITmfContentParser {
+public class TmfNoSuchFieldException extends Exception {
 
-    public TmfEventField[] parse(Object content);
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2504826473032522133L;
+
+	public TmfNoSuchFieldException(String message) {
+		super(message);
+	}
 }

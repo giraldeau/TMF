@@ -10,17 +10,19 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf.request;
+package org.eclipse.linuxtools.tmf.event;
 
-import org.eclipse.linuxtools.tmf.request.TmfDataRequestTest;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+/**
+ * <b><u>TmfEventTypeStub</u></b>
+ * <p>
+ * TODO: Implement me. Please.
+ */
+public class TmfEventTypeStub extends TmfEventType {
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({
-    TmfDataRequestTest.class,
-})
-
-public class AllRequestTests {
-
+   public TmfEventTypeStub() {
+        super(
+        	"TmfEventTypeStub",
+        	new String[] { "Field1", "Field2", "Field3", "Field4", "Field5" }
+        );
+    }
 }
