@@ -10,26 +10,26 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf;
+package org.eclipse.linuxtools.tmf.tests;
 
 import org.eclipse.core.runtime.Plugin;
 
 /**
- * <b><u>TmfCorePlugin</u></b>
+ * <b><u>TmfTestPlugin</u></b>
  * <p>
  * The activator class controls the plug-in life cycle
  */
-public class TmfCorePlugin extends Plugin {
+public class TmfCoreTestPlugin extends Plugin {
 
     // ========================================================================
     // Attributes
     // ========================================================================
 
 	// The plug-in ID
-	public static final String PLUGIN_ID = "org.eclipse.linuxtools.tmf";
+	public static final String PLUGIN_ID = "org.eclipse.linuxtools.tmf.tests";
 
 	// The shared instance
-	private static TmfCorePlugin plugin;
+	private static TmfCoreTestPlugin plugin;
 	
     // ========================================================================
     // Constructors
@@ -38,7 +38,7 @@ public class TmfCorePlugin extends Plugin {
 	/**
 	 * The constructor
 	 */
-	public TmfCorePlugin() {
+	public TmfCoreTestPlugin() {
 		plugin = this;
 	}
 
@@ -49,7 +49,7 @@ public class TmfCorePlugin extends Plugin {
     /**
      * @return the shared instance
      */
-    public static TmfCorePlugin getDefault() {
+    public static TmfCoreTestPlugin getPlugin() {
         return plugin;
     }
 
