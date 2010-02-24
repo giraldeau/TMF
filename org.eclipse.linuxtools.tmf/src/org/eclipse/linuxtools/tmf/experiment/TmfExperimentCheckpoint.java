@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Ericsson
+ * Copyright (c) 2009, 2010 Ericsson
  * 
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -10,23 +10,24 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf.trace;
+package org.eclipse.linuxtools.tmf.experiment;
 
 import org.eclipse.linuxtools.tmf.event.TmfTimestamp;
+import org.eclipse.linuxtools.tmf.trace.TmfTraceContext;
 
 /**
- * <b><u>TmfTraceCheckpoint</u></b>
+ * <b><u>TmfExperimentCheckpoint</u></b>
  * <p>
- * This class maps an event timestamp with a trace location.
+ * TODO: Implement me. Please.
  */
-public class TmfTraceCheckpoint implements Comparable<TmfTraceCheckpoint> {
+public class TmfExperimentCheckpoint implements Comparable<TmfExperimentCheckpoint> {
 
     // ------------------------------------------------------------------------
     // Attributes
     // ------------------------------------------------------------------------
     
     private final TmfTimestamp fTimestamp;
-    private final Object fLocation;
+    private final TmfTraceContext[] fContexts;
 
     // ------------------------------------------------------------------------
     // Constructors
@@ -36,9 +37,9 @@ public class TmfTraceCheckpoint implements Comparable<TmfTraceCheckpoint> {
      * @param ts
      * @param location
      */
-    public TmfTraceCheckpoint(TmfTimestamp ts, Object location) {
+    public TmfExperimentCheckpoint(TmfTimestamp ts, TmfTraceContext[] contexts) {
         fTimestamp = ts;
-        fLocation = location;
+        fContexts = contexts;
     }
 
     // ------------------------------------------------------------------------
@@ -55,16 +56,16 @@ public class TmfTraceCheckpoint implements Comparable<TmfTraceCheckpoint> {
     /**
      * @return the checkpoint event stream location
      */
-    public Object getLocation() {
-        return fLocation;
+    public TmfTraceContext[] getContexts() {
+        return fContexts;
     }
 
     // ------------------------------------------------------------------------
     // Comparable
     // ------------------------------------------------------------------------
 
-    public int compareTo(TmfTraceCheckpoint other) {
-        return fTimestamp.compareTo(other.fTimestamp, false);
-    }
+	public int compareTo(TmfExperimentCheckpoint other) {
+		return fTimestamp.compareTo(other.fTimestamp, false);
+	}
 
 }

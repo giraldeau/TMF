@@ -15,20 +15,23 @@ package org.eclipse.linuxtools.tmf.tests.request;
 import junit.framework.TestCase;
 
 import org.eclipse.linuxtools.tmf.event.TmfEvent;
+import org.eclipse.linuxtools.tmf.event.TmfTimeRange;
+import org.eclipse.linuxtools.tmf.event.TmfTimestamp;
 import org.eclipse.linuxtools.tmf.request.TmfDataRequest;
+import org.eclipse.linuxtools.tmf.request.TmfEventRequest;
 
 /**
- * <b><u>TmfDataRequestTest</u></b>
+ * <b><u>TmfEventRequestTest</u></b>
  * <p>
  * TODO: Implement me. Please.
  */
-public class TmfDataRequestTest extends TestCase {
+public class TmfEventRequestTest extends TestCase {
 
 	// ------------------------------------------------------------------------
 	// Housekeeping
 	// ------------------------------------------------------------------------
 
-	public TmfDataRequestTest(String name) {
+	public TmfEventRequestTest(String name) {
 		super(name);
 	}
 
@@ -47,33 +50,48 @@ public class TmfDataRequestTest extends TestCase {
 	// ------------------------------------------------------------------------
 
 	public void testTmfDataRequest() {
-        TmfDataRequest<TmfEvent> request = new TmfDataRequest<TmfEvent>(TmfEvent.class);
+        TmfEventRequest<TmfEvent> request = new TmfEventRequest<TmfEvent>(TmfEvent.class);
+
+        assertEquals("StartTime", TmfTimestamp.BigBang,   request.getRange().getStartTime());
+        assertEquals("EndTime",   TmfTimestamp.BigCrunch, request.getRange().getEndTime());
 
         assertEquals("getIndex",             0, request.getIndex());
         assertEquals("getNbRequestedEvents", TmfDataRequest.ALL_DATA, request.getNbRequested());
         assertEquals("getBlockize", TmfDataRequest.DEFAULT_BLOCK_SIZE, request.getBlockize());
 	}
 
-	public void testTmfDataRequestIndex() {
-        TmfDataRequest<TmfEvent> request = new TmfDataRequest<TmfEvent>(TmfEvent.class, 10);
+	public void testTmfDataRequestTimeRange() {
+        TmfTimeRange range = new TmfTimeRange(new TmfTimestamp(), TmfTimestamp.BigCrunch);
+        TmfEventRequest<TmfEvent> request = new TmfEventRequest<TmfEvent>(TmfEvent.class, range);
 
-        assertEquals("getIndex",             10, request.getIndex());
+        assertEquals("StartTime", range.getStartTime(), request.getRange().getStartTime());
+        assertEquals("EndTime",   range.getEndTime(),   request.getRange().getEndTime());
+
+        assertEquals("getIndex",             0, request.getIndex());
         assertEquals("getNbRequestedEvents", TmfDataRequest.ALL_DATA, request.getNbRequested());
         assertEquals("getBlockize", TmfDataRequest.DEFAULT_BLOCK_SIZE, request.getBlockize());
 	}
 
-	public void testTmfDataRequestIndexNbRequested() {
-        TmfDataRequest<TmfEvent> request = new TmfDataRequest<TmfEvent>(TmfEvent.class, 10, 100);
+	public void testTmfDataRequestTimeRangeNbRequested() {
+        TmfTimeRange range = new TmfTimeRange(new TmfTimestamp(), TmfTimestamp.BigCrunch);
+        TmfEventRequest<TmfEvent> request = new TmfEventRequest<TmfEvent>(TmfEvent.class, range, 100);
 
-        assertEquals("getIndex",              10, request.getIndex());
+        assertEquals("StartTime", range.getStartTime(), request.getRange().getStartTime());
+        assertEquals("EndTime",   range.getEndTime(),   request.getRange().getEndTime());
+
+        assertEquals("getIndex",               0, request.getIndex());
         assertEquals("getNbRequestedEvents", 100, request.getNbRequested());
         assertEquals("getBlockize", TmfDataRequest.DEFAULT_BLOCK_SIZE, request.getBlockize());
 	}
 
-	public void testTmfDataRequestIndexNbEventsBlocksize() {
-        TmfDataRequest<TmfEvent> request = new TmfDataRequest<TmfEvent>(TmfEvent.class, 10, 100, 200);
+	public void testTmfDataRequestTimeRangeNbRequestedBlocksize() {
+        TmfTimeRange range = new TmfTimeRange(new TmfTimestamp(), TmfTimestamp.BigCrunch);
+        TmfEventRequest<TmfEvent> request = new TmfEventRequest<TmfEvent>(TmfEvent.class, range, 100, 200);
 
-        assertEquals("getIndex",              10, request.getIndex());
+        assertEquals("StartTime", range.getStartTime(), request.getRange().getStartTime());
+        assertEquals("EndTime",   range.getEndTime(),   request.getRange().getEndTime());
+
+        assertEquals("getIndex",               0, request.getIndex());
         assertEquals("getNbRequestedEvents", 100, request.getNbRequested());
         assertEquals("getBlockize",          200, request.getBlockize());
 	}
