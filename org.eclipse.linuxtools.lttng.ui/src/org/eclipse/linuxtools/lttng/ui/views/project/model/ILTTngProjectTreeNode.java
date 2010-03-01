@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Ericsson
+ * Copyright (c) 2009, 2010 Ericsson
  * 
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -12,44 +12,30 @@
 
 package org.eclipse.linuxtools.lttng.ui.views.project.model;
 
-import org.eclipse.core.resources.IFolder;
+import java.util.List;
 
 /**
- * <b><u>LTTngTraceEntry</u></b>
+ * <b><u>ILTTngProjectTreeNode</u></b>
  * <p>
  * TODO: Implement me. Please.
+ * TODO: Make ILTTngProjectTreeNode extends IAdaptable
  */
-public class LTTngTraceEntry {
+public interface ILTTngProjectTreeNode {
+
+	public String getName();
+
+	public ILTTngProjectTreeNode getParent();
+
+	public boolean hasChildren();
 	
-	private final LTTngProject fProject;
-	private final IFolder fFolder;
+	public List<ILTTngProjectTreeNode> getChildren();
+	
+	public void removeChild(ILTTngProjectTreeNode child);
 
-	/**
-	 * @param name
-	 */
-	public LTTngTraceEntry(LTTngProject project, IFolder folder) {
-		fProject = project;
-		fFolder = folder;
-	}
+	public void removeChildren();
 
-	/**
-	 * @return
-	 */
-	public LTTngProject getProject() {
-		return fProject;
-	}
+	public void refreshChildren();
 
-	/**
-	 * @return
-	 */
-	public String getName() {
-		return fFolder.getName();
-	}
+	public void refresh();
 
-	/**
-	 * @return
-	 */
-	public IFolder getResource() {
-		return fFolder;
-	}
 }

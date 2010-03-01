@@ -10,7 +10,7 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.lttng.ui.views.project;
+package org.eclipse.linuxtools.lttng.ui.views.project.model;
 
 import java.net.URL;
 
@@ -18,11 +18,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.linuxtools.lttng.ui.LTTngUiPlugin;
-import org.eclipse.linuxtools.lttng.ui.views.project.model.LTTngExperimentEntry;
-import org.eclipse.linuxtools.lttng.ui.views.project.model.LTTngExperimentFolder;
-import org.eclipse.linuxtools.lttng.ui.views.project.model.LTTngProject;
-import org.eclipse.linuxtools.lttng.ui.views.project.model.LTTngTraceEntry;
-import org.eclipse.linuxtools.lttng.ui.views.project.model.LTTngTraceFolder;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
@@ -38,7 +33,8 @@ public class LTTngProjectLabelProvider implements ILabelProvider {
 	private final String fTraceIconFile      = "icons/garland16.png";
 //	private final String fExperimentIconFile = "icons/garland16.png";
 
-	private final Image fProjectIcon;
+	private final Image fOpenedProjectIcon;
+	private final Image fClosedProjectIcon;
 	private final Image fFolderIcon;
 	private final Image fTraceIcon;
 	private final Image fExperimentIcon;
@@ -48,7 +44,8 @@ public class LTTngProjectLabelProvider implements ILabelProvider {
 	 */
 	public LTTngProjectLabelProvider() {
 
-		fProjectIcon = PlatformUI.getWorkbench().getSharedImages().getImage(org.eclipse.ui.ide.IDE.SharedImages.IMG_OBJ_PROJECT);
+		fOpenedProjectIcon = PlatformUI.getWorkbench().getSharedImages().getImage(org.eclipse.ui.ide.IDE.SharedImages.IMG_OBJ_PROJECT);
+		fClosedProjectIcon = PlatformUI.getWorkbench().getSharedImages().getImage(org.eclipse.ui.ide.IDE.SharedImages.IMG_OBJ_PROJECT_CLOSED);
 		fFolderIcon  = PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJ_FOLDER);
 
 		fTraceIcon = loadIcon(fTraceIconFile);
@@ -72,23 +69,24 @@ public class LTTngProjectLabelProvider implements ILabelProvider {
 	 */
 	public Image getImage(Object element) {
 
-		if (element instanceof LTTngProject) {
-			return fProjectIcon;
+		if (element instanceof LTTngProjectNode) {
+			LTTngProjectNode project = (LTTngProjectNode) element;
+			return (project.isOpen()) ? fOpenedProjectIcon : fClosedProjectIcon;
 		}
 
-		if (element instanceof LTTngTraceFolder) {
+		if (element instanceof LTTngTraceFolderNode) {
 			return fFolderIcon;
 		}
 
-		if (element instanceof LTTngTraceEntry) {
+		if (element instanceof LTTngTraceNode) {
 			return fTraceIcon;
 		}
 
-		if (element instanceof LTTngExperimentFolder) {
+		if (element instanceof LTTngExperimentFolderNode) {
 			return fFolderIcon;
 		}
 
-		if (element instanceof LTTngExperimentEntry) {
+		if (element instanceof LTTngExperimentNode) {
 			return fExperimentIcon;
 		}
 
@@ -99,33 +97,15 @@ public class LTTngProjectLabelProvider implements ILabelProvider {
 	 * @see org.eclipse.jface.viewers.ILabelProvider#getText(java.lang.Object)
 	 */
 	public String getText(Object element) {
-		
-		if (element instanceof LTTngProject) {
-			LTTngProject entry = (LTTngProject) element;
-			return entry.getName();
+		ILTTngProjectTreeNode node = (ILTTngProjectTreeNode) element;
+		String label = node.getName();
+		if (node instanceof LTTngTraceFolderNode      || 
+			node instanceof LTTngExperimentFolderNode ||
+			node instanceof LTTngExperimentNode)
+		{
+			label += " [" + node.getChildren().size() + "]";
 		}
-
-		if (element instanceof LTTngTraceFolder) {
-			LTTngTraceFolder entry = (LTTngTraceFolder) element;
-			return entry.getName();
-		}
-
-		if (element instanceof LTTngTraceEntry) {
-			LTTngTraceEntry entry = (LTTngTraceEntry) element;
-			return entry.getName();
-		}
-
-		if (element instanceof LTTngExperimentFolder) {
-			LTTngExperimentFolder entry = (LTTngExperimentFolder) element;
-			return entry.getName();
-		}
-
-		if (element instanceof LTTngExperimentEntry) {
-			LTTngExperimentEntry entry = (LTTngExperimentEntry) element;
-			return entry.getName();
-		}
-
-		return null;
+		return label;
 	}
 
 	/* (non-Javadoc)

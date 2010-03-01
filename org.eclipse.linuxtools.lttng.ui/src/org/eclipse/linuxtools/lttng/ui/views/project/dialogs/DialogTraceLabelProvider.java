@@ -14,7 +14,7 @@ package org.eclipse.linuxtools.lttng.ui.views.project.dialogs;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.linuxtools.lttng.ui.views.project.model.LTTngTraceEntry;
+import org.eclipse.linuxtools.lttng.ui.views.project.model.LTTngTraceNode;
 import org.eclipse.swt.graphics.Image;
 
 /**
@@ -22,7 +22,7 @@ import org.eclipse.swt.graphics.Image;
  * <p>
  * TODO: Implement me. Please.
  */
-public class LTTngTraceLabelProvider extends LabelProvider implements ITableLabelProvider {
+public class DialogTraceLabelProvider extends LabelProvider implements ITableLabelProvider {
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -35,8 +35,8 @@ public class LTTngTraceLabelProvider extends LabelProvider implements ITableLabe
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 	 */
 	public String getColumnText(Object element, int columnIndex) {
-		if (element instanceof LTTngTraceEntry) {
-			LTTngTraceEntry entry = (LTTngTraceEntry) element;
+		if (element instanceof LTTngTraceNode) {
+			LTTngTraceNode entry = (LTTngTraceNode) element;
 			switch (columnIndex) {
 				case 0:
 					return entry.getName();

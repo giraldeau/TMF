@@ -14,21 +14,21 @@ package org.eclipse.linuxtools.lttng.ui.views.project.dialogs;
 
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.linuxtools.lttng.ui.views.project.model.LTTngTraceFolder;
+import org.eclipse.linuxtools.lttng.ui.views.project.model.LTTngTraceFolderNode;
 
 /**
  * <b><u>LTTngTracesContentProvider</u></b>
  * <p>
  * TODO: Implement me. Please.
  */
-public class LTTngTraceContentProvider implements IStructuredContentProvider {
+public class DialogTraceContentProvider implements IStructuredContentProvider {
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IStructuredContentProvider#getElements(java.lang.Object)
 	 */
 	public Object[] getElements(Object inputElement) {
-		if (inputElement instanceof LTTngTraceFolder) {
-			LTTngTraceFolder folder = (LTTngTraceFolder) inputElement;
+		if (inputElement instanceof LTTngTraceFolderNode) {
+			LTTngTraceFolderNode folder = (LTTngTraceFolderNode) inputElement;
 			return folder.getTraces();
 		}
 		return null;
