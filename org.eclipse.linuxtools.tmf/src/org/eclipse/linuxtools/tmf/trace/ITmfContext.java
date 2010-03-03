@@ -10,14 +10,20 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf.component;
+package org.eclipse.linuxtools.tmf.trace;
 
 /**
  * <b><u>ITmfContext</u></b>
  * <p>
  * This is a place-holder for the context objects.
  */
-public interface ITmfContext {
+public interface ITmfContext extends Cloneable {
 
-	public ITmfContext clone();
+	public void setLocation(ITmfLocation location);
+	public ITmfLocation getLocation();
+
+	public void setRank(long value);
+	public long getRank();
+	public void updateRank(int value);
+
 }
