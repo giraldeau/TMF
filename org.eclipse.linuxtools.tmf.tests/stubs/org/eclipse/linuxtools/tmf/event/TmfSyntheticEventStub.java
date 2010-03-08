@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Ericsson
+ * Copyright (c) 2009, 2010 Ericsson
  * 
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -10,39 +10,21 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf.signal;
+package org.eclipse.linuxtools.tmf.event;
 
 /**
- * <b><u>TmfSignal</u></b>
+ * <b><u>TmfSyntheticEventStub</u></b>
  * <p>
  * TODO: Implement me. Please.
  */
-public abstract class TmfSignal {
+public class TmfSyntheticEventStub extends TmfEvent {
 
-	// The signal originator
-	private final Object fSource;
 
-	private int fReference;
-
-	public TmfSignal(Object source) {
-		this(source, 0);
+	public TmfSyntheticEventStub(TmfEvent event) {
+		super(event);
 	}
-
-	public TmfSignal(Object source, int reference) {
-		fSource = source;
-		fReference = reference;
-	}
-
-	public Object getSource() {
-		return fSource;
-	}
-
-	public void setReference(int reference) {
-		fReference = reference;
-	}
-
-	public int getReference() {
-		return fReference;
+	public TmfSyntheticEventStub(TmfSyntheticEventStub other) {
+		super(other);
 	}
 
 }

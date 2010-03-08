@@ -14,10 +14,16 @@ package org.eclipse.linuxtools.tmf.component;
 
 import java.lang.reflect.Array;
 import java.util.Vector;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.eclipse.linuxtools.tmf.event.TmfData;
 import org.eclipse.linuxtools.tmf.request.ITmfRequestHandler;
 import org.eclipse.linuxtools.tmf.request.TmfDataRequest;
+import org.eclipse.linuxtools.tmf.request.TmfRequestExecutor;
+import org.eclipse.linuxtools.tmf.signal.TmfEndSynchSignal;
+import org.eclipse.linuxtools.tmf.signal.TmfSignalHandler;
+import org.eclipse.linuxtools.tmf.signal.TmfStartSynchSignal;
 import org.eclipse.linuxtools.tmf.trace.ITmfContext;
 
 /**
@@ -33,24 +39,29 @@ import org.eclipse.linuxtools.tmf.trace.ITmfContext;
  * <p>
  * TODO: Add support for providing multiple data types.
  */
-public abstract class TmfProvider<T extends TmfData> extends TmfComponent implements ITmfRequestHandler<T> {
+public abstract class TmfDataProvider<T extends TmfData> extends TmfComponent implements ITmfRequestHandler<T> {
 
-	private Class<T> fType;
+	final protected Class<T> fType;
+
+	public static final int DEFAULT_QUEUE_SIZE = 1000;
+	protected final int fQueueSize;
+	protected final BlockingQueue<T> fDataQueue;
+	protected final TmfRequestExecutor fExecutor;
 
 	// ------------------------------------------------------------------------
 	// Constructors (enforce that a type be supplied) 
 	// ------------------------------------------------------------------------
 	
-	@SuppressWarnings("unused")
-	private TmfProvider() {
+	public TmfDataProvider(String name, Class<T> type) {
+		this(name, type, DEFAULT_QUEUE_SIZE);
 	}
 
-	@SuppressWarnings("unused")
-	private TmfProvider(TmfProvider<T> other) {
-	}
-
-	protected TmfProvider(Class<T> type) {
+	protected TmfDataProvider(String name, Class<T> type, int queueSize) {
+		super(name);
+		fQueueSize = queueSize;
 		fType = type;
+		fDataQueue = new LinkedBlockingQueue<T>(fQueueSize);
+		fExecutor = new TmfRequestExecutor();
 		register();
 	}
 
@@ -66,6 +77,10 @@ public abstract class TmfProvider<T extends TmfData> extends TmfComponent implem
 		super.deregister();
 	}
 
+	public int getQueueSize() {
+		return fQueueSize;
+	}
+
 	// ------------------------------------------------------------------------
 	// ITmfRequestHandler
 	// ------------------------------------------------------------------------
@@ -74,10 +89,15 @@ public abstract class TmfProvider<T extends TmfData> extends TmfComponent implem
 
 	public void processRequest(final TmfDataRequest<T> request, boolean waitForCompletion) {
 
+//		System.out.println("[" + getName() + "]" + " New request: " + request.getRequestId());
+//		if (request.getRequestId() == 0) {
+//			System.out.println("");
+//		}
+		
 		//Process the request 
 		processDataRequest(request);
 
-		// Wait for completion if needed
+		// Wait for completion if requested
     	if (waitForCompletion) {
 			request.waitForCompletion();
 		}
@@ -100,11 +120,15 @@ public abstract class TmfProvider<T extends TmfData> extends TmfComponent implem
 				int nbRead = 0;
 
 				// Initialize the execution
-				ITmfContext context = setContext(request);
+				ITmfContext context = armRequest(request);
+				if (context == null) {
+					request.fail();
+					return;
+				}
 
 				// Get the ordered events
 				T data = getNext(context);
-				while (data != null && !request.isCancelled() && nbRead < nbRequested && !isCompleted(request, data))
+				while (data != null && !isCompleted(request, data, nbRead))
 				{
 					result.add(data);
 					if (++nbRead % blockSize == 0) {
@@ -118,7 +142,7 @@ public abstract class TmfProvider<T extends TmfData> extends TmfComponent implem
 				request.done();
 			}
 		};
-		thread.start();
+		fExecutor.queueRequest(thread);
 	}
 
 	/**
@@ -129,7 +153,7 @@ public abstract class TmfProvider<T extends TmfData> extends TmfComponent implem
 	 * @param data
 	 */
 	@SuppressWarnings("unchecked")
-	private void pushData(TmfDataRequest<T> request, Vector<T> data) {
+	protected void pushData(TmfDataRequest<T> request, Vector<T> data) {
 		synchronized(request) {
 			if (!request.isCompleted()) {
 				T[] result = (T[]) Array.newInstance(fType, data.size());
@@ -142,23 +166,39 @@ public abstract class TmfProvider<T extends TmfData> extends TmfComponent implem
 	}
 
 	/**
-	 * Initialize the provider based on the request. The context is
-	 * provider specific and will be updated by getNext().
-	 * 
-	 * @param request
-	 * @return
-	 */
-	public abstract ITmfContext setContext(TmfDataRequest<T> request);
-	
-	/**
 	 * Return the next piece of data based on the context supplied. The context
 	 * would typically be updated for the subsequent read.
 	 * 
 	 * @param context
 	 * @return
 	 */
-	public abstract T getNext(ITmfContext context);
+	public T getNext(ITmfContext context) {
+		try {
+			T event = fDataQueue.take();
+			return event;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 
+	public void queueResult(T data) {
+		try {
+			fDataQueue.put(data);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	/**
+	 * Initialize the provider based on the request. The context is
+	 * provider specific and will be updated by getNext().
+	 * 
+	 * @param request
+	 * @return an application specific context; null if request can't be serviced
+	 */
+	public abstract ITmfContext armRequest(TmfDataRequest<T> request);
+	
 	/**
 	 * Checks if the data meets the request completion criteria.
 	 * 
@@ -166,6 +206,20 @@ public abstract class TmfProvider<T extends TmfData> extends TmfComponent implem
 	 * @param data
 	 * @return
 	 */
-	public abstract boolean isCompleted(TmfDataRequest<T> request, T data);
+	public boolean isCompleted(TmfDataRequest<T> request, T data, int nbRead) {
+		return request.isCompleted() || nbRead >= request.getNbRequested();
+	}
+
+	@TmfSignalHandler
+	public void startSynch(TmfStartSynchSignal signal) {
+//		if (getName().equals("MyExperiment"))
+//			System.out.println("[" + getName() + "]" + " Start synch: " + signal.getReference());
+	}
+
+	@TmfSignalHandler
+	public void endSynch(TmfEndSynchSignal signal) {
+//		if (getName().equals("MyExperiment"))
+//			System.out.println("[" + getName() + "]" + " End synch: " + signal.getReference());
+	}
 
 }
