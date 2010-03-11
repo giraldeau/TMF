@@ -16,33 +16,33 @@ import org.eclipse.linuxtools.tmf.event.TmfEvent;
 import org.eclipse.linuxtools.tmf.event.TmfTimeRange;
 
 /**
- * <b><u>TmfEventRequest</u></b>
+ * <b><u>TmfCoalescedEventRequest</u></b>
  * <p>
- * Implement me. Please.
+ * TODO: Implement me. Please.
  */
-public abstract class TmfEventRequest<T extends TmfEvent> extends TmfDataRequest<T> implements ITmfEventRequest<T> {
+public class TmfCoalescedEventRequest<T extends TmfEvent> extends TmfCoalescedDataRequest<T> implements ITmfEventRequest<T> {
 
     // ------------------------------------------------------------------------
     // Attributes
     // ------------------------------------------------------------------------
 
-    private final TmfTimeRange fRange;	// The requested events time range
+	private final TmfTimeRange fRange;	// The requested events time range
 
     // ------------------------------------------------------------------------
-    // Constructors
+    // Constructor
     // ------------------------------------------------------------------------
 
     /**
      * @param range
      */
-    public TmfEventRequest(Class<T> dataType) {
+    public TmfCoalescedEventRequest(Class<T> dataType) {
         this(dataType, TmfTimeRange.Eternity, ALL_DATA, DEFAULT_BLOCK_SIZE);
     }
 
     /**
      * @param range
      */
-    public TmfEventRequest(Class<T> dataType, TmfTimeRange range) {
+    public TmfCoalescedEventRequest(Class<T> dataType, TmfTimeRange range) {
         this(dataType, range, ALL_DATA, DEFAULT_BLOCK_SIZE);
     }
 
@@ -50,7 +50,7 @@ public abstract class TmfEventRequest<T extends TmfEvent> extends TmfDataRequest
      * @param range
      * @param nbRequested
      */
-    public TmfEventRequest(Class<T> dataType, TmfTimeRange range, int nbRequested) {
+    public TmfCoalescedEventRequest(Class<T> dataType, TmfTimeRange range, int nbRequested) {
         this(dataType, range, nbRequested, DEFAULT_BLOCK_SIZE);
     }
     
@@ -59,29 +59,32 @@ public abstract class TmfEventRequest<T extends TmfEvent> extends TmfDataRequest
      * @param nbRequested
      * @param blockSize Size of the largest blocks expected
      */
-    public TmfEventRequest(Class<T> dataType, TmfTimeRange range, int nbRequested, int blockSize) {
+    public TmfCoalescedEventRequest(Class<T> dataType, TmfTimeRange range, int nbRequested, int blockSize) {
     	super(dataType, 0, nbRequested, blockSize);
     	fRange = range;
     }
 
-    @Override
-    public boolean equals(Object other) {
-    	if (other instanceof TmfEventRequest<?>) {
-    		TmfEventRequest<?> request = (TmfEventRequest<?>) other;
-    		return super.equals(other) && request.fRange.equals(fRange);
-    	}
-    	return false;
-    }
-
     // ------------------------------------------------------------------------
-    // Accessors
+    // Management
     // ------------------------------------------------------------------------
 
-    /**
-     * @return the requested time range
-     */
-    public TmfTimeRange getRange() {
-        return fRange;
-    }
+	@Override
+	public boolean isCompatible(TmfDataRequest<T> request) {
+		if (request instanceof TmfEventRequest<?>) {
+			boolean ok = getNbRequested() == request.getNbRequested();
+			ok &= getBlockize() == request.getBlockize();
+			ok &= fRange.equals(((TmfEventRequest<T>) request).getRange());
+			return ok;
+		}
+		return false;
+	}
 
+    // ------------------------------------------------------------------------
+    // ITmfEventRequest
+    // ------------------------------------------------------------------------
+
+	public TmfTimeRange getRange() {
+		return fRange;
+	}
+	
 }
