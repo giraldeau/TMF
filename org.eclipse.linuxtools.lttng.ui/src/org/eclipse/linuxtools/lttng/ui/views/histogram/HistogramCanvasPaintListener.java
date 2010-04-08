@@ -1,29 +1,29 @@
+/*******************************************************************************
+ * Copyright (c) 2009 Ericsson
+ * 
+ * All rights reserved. This program and the accompanying materials are
+ * made available under the terms of the Eclipse Public License v1.0 which
+ * accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors:
+ *   William Bourque - Initial API and implementation
+ *******************************************************************************/
 package org.eclipse.linuxtools.lttng.ui.views.histogram;
 
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Rectangle;
 
-public class TraceCanvasPaintListener implements PaintListener {
-	
-	private final static int EMPTY_BACKGROUND_COLOR = SWT.COLOR_WHITE;
-	private final static int HISTOGRAM_BARS_COLOR = SWT.COLOR_DARK_CYAN;
-	private final static int SELECTION_WINDOW_COLOR = SWT.COLOR_RED;
-	
-	private final static int SELECTION_LINE_WIDTH = 2;
-	private final static int SELECTION_CROSSHAIR_LENGTH = 3;
-	
+public class HistogramCanvasPaintListener implements PaintListener {
 	private HistogramContent histogramContent = null;
 	private HistogramSelectedWindow selectedWindow = null;
 	
 	private int columnWidth = 0;
 	private int columnHeight = 0;
 	
-	public TraceCanvasPaintListener(HistogramContent newHistogramContent, int newBarWidth, int newBarHeight) {
-		columnWidth = newBarWidth;
-		columnHeight = newBarHeight;
-		histogramContent = newHistogramContent;
+	public HistogramCanvasPaintListener(HistogramCanvas parentCanvas) {
+		histogramContent = parentCanvas.getHistogramContent();
 	}
 	
 	public void paintControl(PaintEvent e) {
@@ -46,8 +46,8 @@ public class TraceCanvasPaintListener implements PaintListener {
 	}
 	
 	public void clearDrawingSection(PaintEvent e) {
-		e.gc.setForeground(e.display.getSystemColor(EMPTY_BACKGROUND_COLOR));
-		e.gc.setBackground(e.display.getSystemColor(EMPTY_BACKGROUND_COLOR));
+		e.gc.setForeground(e.display.getSystemColor(HistogramConstant.EMPTY_BACKGROUND_COLOR));
+		e.gc.setBackground(e.display.getSystemColor(HistogramConstant.EMPTY_BACKGROUND_COLOR));
 		Rectangle allSection = new Rectangle(0, 0, e.width, e.height);
 		e.gc.fillRectangle(allSection);
 		e.gc.drawRectangle(allSection);
@@ -57,37 +57,37 @@ public class TraceCanvasPaintListener implements PaintListener {
 	// Is it good to put this synchronized?
 	//
 	public synchronized void drawHistogram(PaintEvent e) {
-	    e.gc.setForeground(e.display.getSystemColor(EMPTY_BACKGROUND_COLOR));
+	    e.gc.setForeground(e.display.getSystemColor(HistogramConstant.EMPTY_BACKGROUND_COLOR));
 		Rectangle allSection = new Rectangle(0, 0, histogramContent.getReadyUpToPosition()*columnWidth, e.height);
 		e.gc.fillRectangle(allSection);
 		e.gc.drawRectangle(allSection);
 		
-	    e.gc.setBackground(e.display.getSystemColor(HISTOGRAM_BARS_COLOR));
+	    e.gc.setBackground(e.display.getSystemColor(HistogramConstant.HISTOGRAM_BARS_COLOR));
 	    for ( int x=0; x<histogramContent.getReadyUpToPosition(); x++) {
 	    	Rectangle rect = new Rectangle(columnWidth*x, columnHeight - histogramContent.getElementByIndex(x).intervalHeight, columnWidth, histogramContent.getElementByIndex(x).intervalHeight);
 			
 	    	e.gc.fillRectangle(rect);
 	    }
 	    
-	    e.gc.setBackground(e.display.getSystemColor(EMPTY_BACKGROUND_COLOR));
+	    e.gc.setBackground(e.display.getSystemColor(HistogramConstant.EMPTY_BACKGROUND_COLOR));
 	    Rectangle rect = new Rectangle(columnWidth*histogramContent.getNbElement(), 0, e.width, columnHeight);
 		e.gc.fillRectangle(rect);
 	}
 	
 	public void drawSelectedWindow(PaintEvent e) {
 		
-		e.gc.setForeground(e.display.getSystemColor(SELECTION_WINDOW_COLOR));
-	    e.gc.setBackground(e.display.getSystemColor(SELECTION_WINDOW_COLOR));
+		e.gc.setForeground(e.display.getSystemColor(HistogramConstant.SELECTION_WINDOW_COLOR));
+	    e.gc.setBackground(e.display.getSystemColor(HistogramConstant.SELECTION_WINDOW_COLOR));
 		
-		e.gc.setLineWidth(SELECTION_LINE_WIDTH);
+		e.gc.setLineWidth(HistogramConstant.SELECTION_LINE_WIDTH);
 	    
 		int positionCenter = selectedWindow.getWindowCenterXPosition();
 		int positionLeft = selectedWindow.getWindowPositionLeft();
 		int positionRight = selectedWindow.getWindowPositionRight();
 		
-		if ( (positionRight - positionLeft) < 2 ) {
-			positionLeft = positionCenter - 1;
-			positionLeft = positionCenter + 1;
+		if ( (positionRight - positionLeft) < HistogramConstant.MINIMUM_WINDOW_WIDTH ) {
+			positionLeft  = positionCenter - (HistogramConstant.MINIMUM_WINDOW_WIDTH/2);
+			positionRight = positionCenter + (HistogramConstant.MINIMUM_WINDOW_WIDTH/2);
 		}
 		
 		e.gc.drawLine(positionLeft , 0       , positionLeft , e.height);
@@ -96,19 +96,18 @@ public class TraceCanvasPaintListener implements PaintListener {
 	    e.gc.drawLine(positionLeft , 0       , positionRight, 0);
 	    
 	    
-	    e.gc.drawLine(positionCenter + SELECTION_CROSSHAIR_LENGTH, e.height/2, positionCenter - SELECTION_CROSSHAIR_LENGTH, e.height/2);
-	    e.gc.drawLine(positionCenter, (e.height/2) + SELECTION_CROSSHAIR_LENGTH, positionCenter, (e.height/2) - SELECTION_CROSSHAIR_LENGTH);
+	    e.gc.drawLine(positionCenter + HistogramConstant.SELECTION_CROSSHAIR_LENGTH, e.height/2, positionCenter - HistogramConstant.SELECTION_CROSSHAIR_LENGTH, e.height/2);
+	    e.gc.drawLine(positionCenter, (e.height/2) + HistogramConstant.SELECTION_CROSSHAIR_LENGTH, positionCenter, (e.height/2) - HistogramConstant.SELECTION_CROSSHAIR_LENGTH);
 	}
 	
-	
-	public void setHistogramContent(HistogramContent newhistogramContent) {
-		this.histogramContent = newhistogramContent;
-	}
 	
 	public HistogramContent getHistogramContent() {
 		return histogramContent;
 	}
 	
+	public void setHistogramContent(HistogramContent newhistogramContent) {
+		this.histogramContent = newhistogramContent;
+	}
 	
 	public int getColumnWidth() {
 		return columnWidth;
