@@ -10,7 +10,7 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf.tests.trace;
+package org.eclipse.linuxtools.tmf.tests.experiment;
 
 import java.io.File;
 import java.io.IOException;

@@ -10,10 +10,10 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf.experiment;
+package org.eclipse.linuxtools.tmf.signal;
 
 import org.eclipse.linuxtools.tmf.event.TmfEvent;
-import org.eclipse.linuxtools.tmf.signal.TmfSignal;
+import org.eclipse.linuxtools.tmf.experiment.TmfExperiment;
 
 /**
  * <b><u>TmfExperimentSelectedSignal</u></b>

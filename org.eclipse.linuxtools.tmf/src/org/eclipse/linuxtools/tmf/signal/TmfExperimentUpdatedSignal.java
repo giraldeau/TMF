@@ -10,33 +10,34 @@
  *   Francois Chouinard - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.linuxtools.tmf.trace;
+package org.eclipse.linuxtools.tmf.signal;
 
-import org.eclipse.linuxtools.tmf.event.TmfTimeRange;
-import org.eclipse.linuxtools.tmf.signal.TmfSignal;
+import org.eclipse.linuxtools.tmf.event.TmfEvent;
+import org.eclipse.linuxtools.tmf.experiment.TmfExperiment;
+import org.eclipse.linuxtools.tmf.trace.ITmfTrace;
 
 /**
- * <b><u>TmfTraceUpdatedSignal</u></b>
+ * <b><u>TmfExperimentUpdatedSignal</u></b>
  * <p>
  * TODO: Implement me. Please.
  */
-public class TmfTraceUpdatedSignal extends TmfSignal {
+public class TmfExperimentUpdatedSignal extends TmfSignal {
 
+	private final TmfExperiment<? extends TmfEvent> fExperiment;
 	private final ITmfTrace fTrace;
-	private final TmfTimeRange fTimeRange;
 	
-	public TmfTraceUpdatedSignal(Object source, ITmfTrace trace, TmfTimeRange range) {
+	public TmfExperimentUpdatedSignal(Object source, TmfExperiment<? extends TmfEvent> experiment, ITmfTrace trace) {
 		super(source);
+		fExperiment = experiment;
 		fTrace = trace;
-		fTimeRange = range;
+	}
+
+	public TmfExperiment<? extends TmfEvent> getExperiment() {
+		return fExperiment;
 	}
 
 	public ITmfTrace getTrace() {
 		return fTrace;
-	}
-
-	public TmfTimeRange getRange() {
-		return fTimeRange;
 	}
 
 	/* (non-Javadoc)
@@ -44,7 +45,7 @@ public class TmfTraceUpdatedSignal extends TmfSignal {
 	 */
 	@Override
 	public String toString() {
-		return "[TmfTraceUpdatedSignal (" + fTrace.toString() + ", " + fTimeRange.toString() + ")]";
+		return "[TmfExperimentUpdatedSignal (" + fExperiment.toString() + ", " + fTrace.toString() + ")]";
 	}
 
 }
