@@ -20,9 +20,8 @@ class StateHistoryTreeInterval {
 	private Timevalue intervalStart;
 	private Timevalue intervalEnd;
 	
-	/* These two int's represent the key used to uniquely identify a given state entry */
-	private int pathNameKey;
-	private int baseNameKey;
+	/* This is the key used to uniquely identify a given state entry */
+	private int key;
 	
 	private byte type;			/* type of the 'value': 0 = int, 1 = string */
 	private int valueInt;		/* if type = int, this will store the value */
@@ -30,15 +29,14 @@ class StateHistoryTreeInterval {
 	 							   if type = something else, then it's undefined */
 	
 	/**
-	 * Standard constructor, with the value being an int
+	 * Standard constructors, with the value being either of type int or string
 	 */
 	public StateHistoryTreeInterval(Timevalue intervalStart, Timevalue intervalEnd,
-									int pathNameKey, int baseNameKey, int value) {
+									int key, int value) {
 		
 		this.intervalStart = intervalStart;
 		this.intervalEnd = intervalEnd;
-		this.pathNameKey =  pathNameKey;
-		this.baseNameKey =  baseNameKey;
+		this.key =  key;
 		
 		this.type = 0;
 		this.valueInt = value;
@@ -46,16 +44,15 @@ class StateHistoryTreeInterval {
 	}
 	
 	public StateHistoryTreeInterval(Timevalue intervalStart, Timevalue intervalEnd,
-									int pathNameKey, int baseNameKey, String value) {
+									int key, String value) {
 		
 		this.intervalStart = intervalStart;
 		this.intervalEnd = intervalEnd;
-		this.pathNameKey =  pathNameKey;
-		this.baseNameKey =  baseNameKey;
+		this.key =  key;
 		
-		type = 1;
+		this.type = 1;
 		this.valueInt = -1;
-		valueStr = value;
+		this.valueStr = value;
 	}
 	
 //	/**
@@ -89,7 +86,7 @@ class StateHistoryTreeInterval {
 //	}
 	
 	/**
-	 * Reader constructor v2. Builds the interval using a RandomAccessFile descriptor,
+	 * Reader constructor. Builds the interval using a RandomAccessFile descriptor,
 	 * which is already positioned at the start of the Data Section of a node.
 	 */
 	public StateHistoryTreeInterval(RandomAccessFile desc) {
@@ -165,20 +162,30 @@ class StateHistoryTreeInterval {
 	/**
 	 * Accessors
 	 */
-	public int getKey() {
-		return key;
-	}
-	
-	public char[] getValue() {
-		return value;
-	}
-	
 	public Timevalue getStart() {
 		return intervalStart;
 	}
 	
 	public Timevalue getEnd() {
 		return intervalEnd;
+	}
+	
+	public int getKey() {
+		return key;
+	}
+	
+	public byte getValueType() {
+		return type;
+	}
+	
+	public int getValueInt() {
+		assert( type == 0 );
+		return valueInt;
+	}
+	
+	public String getValueStr() {
+		assert( type == 1 );
+		return valueStr;
 	}
 	
 	
