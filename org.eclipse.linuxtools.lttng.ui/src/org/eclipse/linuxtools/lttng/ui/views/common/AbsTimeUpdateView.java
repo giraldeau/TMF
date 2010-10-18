@@ -62,15 +62,12 @@ public abstract class AbsTimeUpdateView extends TmfView implements
 	// ========================================================================
 	// Data
 	// ========================================================================
-	/**
-	 * One second in nanoseconds
-	 */
-	private static final long INITIAL_WINDOW_OFFSET = 1000000000L; /*
-																	 * 1 sec //
-																	 * in ns //
-																	 */
-	// private static final long INITIAL_WINDOW_OFFSET = 100000000L; /* 100 ms
-	// in ns */
+
+//	 private static final long INITIAL_WINDOW_OFFSET = (1L * 1    * 1000 * 1000); // .001sec
+//	 private static final long INITIAL_WINDOW_OFFSET = (1L * 10   * 1000 * 1000); // .01sec
+	 private static final long INITIAL_WINDOW_OFFSET = (1L * 100  * 1000 * 1000); // .1sec
+//	 private static final long INITIAL_WINDOW_OFFSET = (1L * 1000 * 1000 * 1000); // 1sec
+
 	/**
 	 * Number of events before a GUI refresh
 	 */
@@ -78,8 +75,7 @@ public abstract class AbsTimeUpdateView extends TmfView implements
 	private static final long DEFAULT_OFFSET = 0L;
 	private static final int DEFAULT_CHUNK = 1;
 
-	protected boolean synch = true; // time synchronisation, used to be an
-									// option
+	protected boolean synch = true; // time synchronization, used to be an option
 	protected ITimeAnalysisViewer tsfviewer = null;
 
 	private LttngSyntEventRequest fCurrentRequest = null;
@@ -484,13 +480,15 @@ public abstract class AbsTimeUpdateView extends TmfView implements
 	 * @param waitInd
 	 */
 	protected void waitCursor(final boolean waitInd) {
-		if (tsfviewer != null) {
+		if ((tsfviewer != null) && (!tsfviewer.getControl().isDisposed())) {
 			Display display = tsfviewer.getControl().getDisplay();
 
 			// Perform the updates on the UI thread
 			display.asyncExec(new Runnable() {
 				public void run() {
-					tsfviewer.waitCursor(waitInd);
+					if ((tsfviewer != null) && (!tsfviewer.getControl().isDisposed())) {
+						tsfviewer.waitCursor(waitInd);
+					}
 				}
 			});
 		}
@@ -600,14 +598,16 @@ public abstract class AbsTimeUpdateView extends TmfView implements
 		if (complete) {
 			// reselect to original time
 			ParamsUpdater paramUpdater = getParamsUpdater();
-			if (paramUpdater != null && tsfviewer != null) {
+			if ((paramUpdater != null) && (tsfviewer != null) && (!tsfviewer.getControl().isDisposed())) {
 				final Long selTime = paramUpdater.getSelectedTime();
 				if (selTime != null) {
 					TraceDebug.debug("View: " + getName() + "\n\t\tRestoring the selected time to: " + selTime);
 					Display display = tsfviewer.getControl().getDisplay();
 					display.asyncExec(new Runnable() {
 						public void run() {
-							tsfviewer.setSelectedTime(selTime, false, this);
+							if ((tsfviewer != null) && (!tsfviewer.getControl().isDisposed())) {
+								tsfviewer.setSelectedTime(selTime, false, this);
+							}
 						}
 					});
 				}
