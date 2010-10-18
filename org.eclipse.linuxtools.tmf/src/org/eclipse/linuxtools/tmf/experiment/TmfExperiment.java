@@ -148,7 +148,7 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
      * Clears the experiment
      */
     @Override
-	public void dispose() {
+	public synchronized void dispose() {
     	if (fTraces != null) {
     		for (ITmfTrace trace : fTraces) {
     			trace.dispose();
@@ -537,7 +537,7 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
 			// Add new entry at proper location (if empty) 
 			if (fCheckpoints.size() == position) {
 				ITmfLocation<?> location = context.getLocation().clone();
-				fCheckpoints.add(new TmfCheckpoint(timestamp, location));
+				fCheckpoints.add(new TmfCheckpoint(timestamp.clone(), location));
 //				System.out.println(this + "[" + (fCheckpoints.size() - 1) + "] " + timestamp + ", " + location.toString());
 			}
 		}
@@ -674,6 +674,8 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
 			private void updateExperiment() {
 				int nbRead = getNbRead();
 				if (nbRead != 0) {
+//					updateTimeRange();
+//					updateNbEvents();
 					fTimeRange = new TmfTimeRange(startTime, new TmfTimestamp(lastTime));
 					fNbEvents  = nbRead;
 					notifyListeners();
