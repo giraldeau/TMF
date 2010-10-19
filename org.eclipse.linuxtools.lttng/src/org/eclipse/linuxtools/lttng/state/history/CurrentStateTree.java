@@ -39,7 +39,7 @@ import java.util.Vector;
 class CurrentStateTree {
 	
 	protected Hashtable<String, Integer> conversionTable;
-	protected Vector<char[]> currentStateInfo;				/* currentStateInfo.size() = number of different entries we've seen so far */
+	protected Vector<Object> currentStateInfo;				/* currentStateInfo.size() = number of different entries we've seen so far */
 	
 	protected StateHistoryTree stateHistTree;
 
@@ -50,7 +50,7 @@ class CurrentStateTree {
 	public CurrentStateTree() {
 		//FIXME use some starting values. get them from somewhere?
 		conversionTable = new Hashtable<String, Integer>();
-		currentStateInfo = new Vector<char[]>();
+		currentStateInfo = new Vector<Object>();
 		
 		
 		/* Default values*/
@@ -75,7 +75,7 @@ class CurrentStateTree {
 		this.conversionTable = new Hashtable<String, Integer>( bt.conversionTable.size() );  //FIXME useful/correct to do this?
 		bt.conversionTable.putAll(this.conversionTable);
 		
-		this.currentStateInfo = new Vector<char[]>( bt.currentStateInfo.size() );
+		this.currentStateInfo = new Vector<Object>( bt.currentStateInfo.size() );
 		//We do not care about the data in that vector though, we'll get our own.
 		
 		/* Both objects still need to point to the same State History Tree: */

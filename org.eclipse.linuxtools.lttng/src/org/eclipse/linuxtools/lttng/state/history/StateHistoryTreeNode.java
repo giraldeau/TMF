@@ -38,7 +38,6 @@ class StateHistoryTreeNode {
 	private boolean isFull;				/* Is this node full? (no more room for intervals) */
 	private int intervalCount;			/* Number of intervals in this node */
 	
-	private int dataSectionEndOffset;	/* Position in the file (and the byte array) where the data section ENDS */
 	private int stringSectionOffset;	/* Position in the file/byte array where the string section BEGINS */
 	
 	private Vector<StateHistoryTreeInterval> intervals;	/* Vector containing all the intervals contained in this node */
@@ -65,7 +64,6 @@ class StateHistoryTreeNode {
 		
 		this.intervalCount = 0;
 		
-		this.dataSectionEndOffset = this.getHeaderSize();
 		this.stringSectionOffset = containerTree.BLOCKSIZE;
 		
 		this.intervals = new Vector<StateHistoryTreeInterval>();
@@ -181,7 +179,6 @@ class StateHistoryTreeNode {
 			intervalCount = desc.readInt();
 			isDone = desc.readBoolean();
 			isFull = desc.readBoolean();
-			dataSectionEndOffset = desc.readInt();
 			stringSectionOffset = desc.readInt();
 			
 			children = new int[containerTree.MAX_NB_CHILDREN];
@@ -197,15 +194,8 @@ class StateHistoryTreeNode {
 			/* Read the intervals information */
 			this.intervals = new Vector<StateHistoryTreeInterval>(intervalCount);
 			
-			/* We will keep using the file descriptor 'desc' to read the Data Section of the node, since
-			 * everything in there is fixed-size.
-			 * 
-			 * For the String Section however, we will need to copy it to a
-			 * byte array and then cut it into smaller parts.
-			 * TODO Any way to avoid this copy?
-			 */
 			for ( int i=0; i < intervalCount; i++ ) {
-				intervals.add( new StateHistoryTreeInterval(desc) );
+				intervals.add( new StateHistoryTreeInterval(desc, this.getStartPositionInFile()) );
 			}
 			
 			
@@ -224,7 +214,9 @@ class StateHistoryTreeNode {
 	 * @param desc The RandomAccessFile in which we'll write
 	 */
 	public void writeSelf(RandomAccessFile desc) throws IOException {
-
+		int curStringsEntryPos = stringSectionOffset;
+		int size;
+		
 		/* Write the header */
 		desc.writeLong(this.getNodeStart().getValue());
 		desc.writeLong(this.getNodeEnd().getValue());
@@ -234,7 +226,6 @@ class StateHistoryTreeNode {
 		desc.writeInt(intervalCount);
 		desc.writeBoolean(isDone);
 		desc.writeBoolean(isFull);
-		desc.writeInt(dataSectionEndOffset);
 		desc.writeInt(stringSectionOffset);
 		
 		for ( int i=0; i < nbChildren; i++ ) {
@@ -246,19 +237,14 @@ class StateHistoryTreeNode {
 		}
 		
 		/* Write the intervals information */
-		/* (since we already have everything in memory, we can be a bit more clever
-		 * and write everything sequentially) */
 		
-		/* Write the Data section */
 		for ( int i=0; i < intervalCount; i++ ) {
-			intervals.get(i).writeDataEntry(desc);
+			size = intervals.get(i).writeInterval(desc, this.getStartPositionInFile(), curStringsEntryPos);
+			curStringsEntryPos += size;		// necessary to put on 2 lines? Not sure how Java would handle it on one... */
 		}
 		
-		/* Write the Strings section (in reverse order, so we write sequentially */
-		desc.seek(stringSectionOffset);
-		for ( int i = intervalCount - 1; i >= 0; i-- ) {
-			intervals.get(i).writeStringsEntry(desc);
-		}
+		/* If the offsets were right, we should now be at the end of the block */
+		assert( curStringsEntryPos == containerTree.BLOCKSIZE );
 			
 	}
 	
@@ -342,12 +328,23 @@ class StateHistoryTreeNode {
 		return intervals.get(index);
 	}
 	
+	
+	private long getStartPositionInFile() {
+		return sequenceNumber * containerTree.BLOCKSIZE + StateHistoryTree.getTreeHeaderSize();
+	}
+	
+	/**
+	 * @return The offset, within the node, where the Data section ends
+	 */
+	private int getDataSectionEndOffset() {
+		return this.getNodeHeaderSize() + StateHistoryTreeNode.getDataEntrySize() * intervalCount;
+	}
 	/**
 	 * Returns the free space in the node, which is simply put,
 	 * the stringSectionOffset - dataSectionOffset
 	 */
 	public int getNodeFreeSpace() {
-		return stringSectionOffset - dataSectionEndOffset;
+		return stringSectionOffset - this.getDataSectionEndOffset();
 	}
 	
 	/**
@@ -355,7 +352,7 @@ class StateHistoryTreeNode {
 	 * (used space / total usable space, which excludes the header)
 	 */
 	public int getNodeUsagePRC() {
-		float freePercent = (float) this.getNodeFreeSpace() / (float) (containerTree.BLOCKSIZE - this.getHeaderSize()) * 100f;
+		float freePercent = (float) this.getNodeFreeSpace() / (float) (containerTree.BLOCKSIZE - this.getNodeHeaderSize()) * 100f;
 		return (int) (100 - freePercent);
 	}
 
@@ -371,9 +368,8 @@ class StateHistoryTreeNode {
 		intervalCount++;
 		intervals.add( newInterval );
 		
-		/* Update the in-node offset "pointers" */
-		dataSectionEndOffset += this.getHeaderSize();
-		stringSectionOffset -= ( newInterval.getValue().length * 2 + 1 );
+		/* Update the in-node offset "pointer" */
+		stringSectionOffset -= ( newInterval.getStringsEntrySize() );
 	}
 
 
@@ -464,7 +460,7 @@ class StateHistoryTreeNode {
 	 * @param stateInfo : the same stateInfo that comes from SHT's doQuery()
 	 * @param t : the Timevalue for which the query is for. Only return intervals that intersect t.
 	 */
-	public void getInfoFromNode(Vector<char[]> stateInfo, Timevalue t) {
+	public void getInfoFromNode(Vector<Object> stateInfo, Timevalue t) {
 		/* 
 		 * TODO: this here could be optimised (to half the time, on average) if we could
 		 * guarantee that the intervals are sorted chronologically.
@@ -476,7 +472,7 @@ class StateHistoryTreeNode {
 			/* if:  t intersects intervals[i] then: write its value in stateInfo */
 			if ( t.compareTo( intervals.get(i).getEnd(), false) <= 0 ) {
 				if ( t.compareTo( intervals.get(i).getStart(), false) >= 0 ) {
-					stateInfo.set( intervals.get(i).getKey(), intervals.get(i).getValue() );
+					stateInfo.set( intervals.get(i).getKey(), intervals.get(i).getValueType() );
 				}
 			}
 		}
@@ -490,13 +486,13 @@ class StateHistoryTreeNode {
 	 * When the node will be serialized with the toBytes() function,
 	 * this value represents at which offset the Map Section begins.
 	 */
-	protected int getHeaderSize() {
+	private int getNodeHeaderSize() {
 		
 		int size =	  16	/* 2 x Timevalue ( = 2 x long ) */
 					+ 8		/* 2 x int (sequenceNumber & parentSequenceNumber) */
 					+ 8		/* 2 x int (nbChildren, intervalCount) */
 					+ 2		/* 2 x bytes (isDone, isFull) (we will store the booleans as bytes) */
-					+ 8		/* 2 x int (dataSectionEndOffset, stringsSectionOffset) */
+					+ 4		/* 1 x int (stringsSectionOffset) */
 					+ 4 * containerTree.MAX_NB_CHILDREN		/* MAX_NB * int ('children' table) */
 					+ 8 * containerTree.MAX_NB_CHILDREN;	/* MAX_NB * Timevalue ('childStart' table) */
 		return size;
@@ -504,8 +500,10 @@ class StateHistoryTreeNode {
 	
 	protected static int getDataEntrySize() {
 		return    16	/* 2 x Timevalue/long (interval start + end) */
-				+ 12;	/* 3 x Int (key, valueOffset, valueSize) */
-			 /* = 28 */
+				+ 4		/* int (key) */
+				+ 1		/* byte (type) */
+				+ 4;	/* int (valueOffset) */
+			 /* = 25 */
 	}
 	
 	@Override

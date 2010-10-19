@@ -89,36 +89,52 @@ class StateHistoryTreeInterval {
 	 * Reader constructor. Builds the interval using a RandomAccessFile descriptor,
 	 * which is already positioned at the start of the Data Section of a node.
 	 */
-	public StateHistoryTreeInterval(RandomAccessFile desc) {
+	public StateHistoryTreeInterval(RandomAccessFile desc, long nodeStartPosition) {
 		int valueOffset, valueSize;
-		long initialPosition, position;		/* To save the descriptor's position in the file, so we can restore it for the next read */
+		byte valueArray[];
+		long position;		/* To save the descriptor's position in the file, so we can restore it for the next read */
 		
 		try {
-			initialPosition = desc.getFilePointer();
-			
 			/* Read the Data Section entry */
 			this.intervalStart = new Timevalue(desc.readLong());
 			this.intervalEnd = new Timevalue(desc.readLong());
 			this.key = desc.readInt();
 			
-			valueOffset = desc.readInt();
-			valueSize = desc.readInt();
-			
-			/* save the reader's position */
-			position = desc.getFilePointer();
-			
-			/* Read the Strings entry */
-			this.value = new char[valueSize];
-			desc.seek(initialPosition + (long) valueOffset);	/* go to the start of the Strings entry */
-			for (int i=0; i < valueSize; i++) {
-				value[i] = desc.readChar();
+			/* Read the 'type' of the value, then react accordingly */
+			this.type = desc.readByte();
+			if ( type == 0 ) {
+			/* the type of ValueOffset is 'value' */
+				this.valueInt = desc.readInt();
+				this.valueStr = null;
+				
+			} else if ( type == 1 ) {
+			/* the type is 'offset' */
+				this.valueInt = -1;
+				valueOffset = desc.readInt();
+				
+				/* Go read the corresponding entry in the Strings section of the block */
+				position = desc.getFilePointer();
+				desc.seek( nodeStartPosition + (long) valueOffset );
+				valueSize = (int) desc.readByte();	/* the first byte = the size to read */
+				
+				valueArray = new byte[valueSize];		//FIXME isn't there a way to generate the Strings object directly?
+				for (int i=0; i < valueSize; i++) {
+					valueArray[i] = desc.readByte();
+				}
+				this.valueStr = new String(valueArray);
+				
+				/* Confirm the 0'ed byte at the end */
+				//FIXME make only used when in debug mode
+				assert( desc.readByte() == 0 );
+				
+				/* Restore the file pointer's position (so we can read the next interval) */
+				desc.seek(position);
+				
+			} else {
+			/* Unrecognized type */
+				assert( false );
 			}
 			
-			/* confirm this is a valid string we just read (there should be an extra 0'ed byte at the end) */
-			assert (desc.readByte() == 0);						 
-			
-			/* restore the reader to the position we had earlier (so the next interval can be read) */
-			desc.seek(position);
 		
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -135,30 +151,46 @@ class StateHistoryTreeInterval {
 	 * for the last interval in the node)
 	 * 
 	 * @param desc RandomAccessFile that's been passed on from the SHT IO object
+	 * @param nodeStartPosition offset (in the file) where the node starts. passed on by the SHTNode object
+	 * @param offsetForStringEntry Offset (in the *node*) where this interval is to write its Strings section entry, if any
+	 * @return The length of the Strings entry that was used (so the SHT can get notified). 0 if no Strings entry.
 	 */
-	public void writeDataEntry(RandomAccessFile desc) throws IOException {
+	public int writeInterval(RandomAccessFile desc, long nodeStartPosition,
+								int offsetForStringEntry) throws IOException {
+		long position;
+		
 		desc.writeLong(intervalStart.getValue());
 		desc.writeLong(intervalEnd.getValue());
 		desc.writeInt(key);
-		desc.writeInt(value)
-	}
-	
-	/**
-	 * Same thing as the previous method, only for the Strings entry now.
-	 * This function takes care of adding the "0'ed byte" at the end of the array.
-	 * The descriptor needs to be positioned at the start of the entry and will end
-	 * at the start of the *previous* entry, which comes next in the file.
-	 * (or at the end of the node if it's the *first* interval).
-	 * 
-	 * @param desc RandomAccessFile that's been passed on from the SHT IO object
-	 */
-	public void writeStringsEntry(RandomAccessFile desc) {
-		for ( int i=0; i < value.length; i++ ) {
-			desc.writeChar(value[i]);
+		desc.writeByte(type);
+		
+		if ( type == 0 ) {
+		/* We write the 'valueOffset' field as a straight value */
+			desc.writeInt(valueInt);
+			return 0; /* we didn't use a Strings section entry */
+		
+		} else if ( type == 1 ) {
+		/* we use the valueOffset as an offset. */
+			desc.writeInt(offsetForStringEntry);
+			position = desc.getFilePointer();
+			desc.seek( nodeStartPosition + (long) offsetForStringEntry );
+			
+			/* write the Strings entry (1st byte = size, then the bytes, then the 0) */
+			desc.writeByte(valueStr.length());
+			desc.write(valueStr.getBytes());
+			desc.write(0);	//FIXME only for debug mode...
+			desc.seek(position);
+			return valueStr.length() + 2;	/* +1 size at the start, +1 for the 0 at the end */
+		
+		} else {
+		/* unrecognized type */
+			assert( false );
+			return -1;
 		}
-		desc.writeByte(0);
+		
 	}
-	
+
+
 	/**
 	 * Accessors
 	 */
@@ -188,13 +220,27 @@ class StateHistoryTreeInterval {
 		return valueStr;
 	}
 	
-	
 	/**
 	 * Calculate the (serialized) size of this interval
 	 */
 	public int getIntervalSize() {
-		/* (fixed-sized entry) + number of bytes in the var. size "value" ( + 1 for the 0'ed byte at the end) */
-		return StateHistoryTreeNode.getDataEntrySize() + value.length * 2 + 1;
+		return StateHistoryTreeNode.getDataEntrySize() + this.getStringsEntrySize();
+	}
+	
+	public int getStringsEntrySize() {
+		if ( type == 0) {
+			return 0;
+			
+		} else if ( type == 1 ) {
+			return valueStr.length() + 2;
+			/* (+1 for the first byte indicating the size, +1 for the 0'ed byte) */
+			//TODO only +1 in non-debug mode
+			
+		} else {
+		/* unrecognized type */
+			assert( false );
+			return -1;
+		}
 	}
 	
 	

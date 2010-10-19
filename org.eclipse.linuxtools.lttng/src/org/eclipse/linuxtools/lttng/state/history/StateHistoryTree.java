@@ -366,7 +366,7 @@ public class StateHistoryTree {
 	 * @param stateInfo : the currentStateInfo of the CurrentStateTree, which this method will fill up
 	 * @param t : the timestamp for which we want the query
 	 */
-	public void doQuery(Vector<char[]> stateInfo, Timevalue t) {
+	public void doQuery(Vector<Object> stateInfo, Timevalue t) {
 		int potentialNext = 0;
 		/* We start by reading the information in the root node */
 		StateHistoryTreeNode currentNode = treeIO.readNode(rootNode);
@@ -398,14 +398,11 @@ public class StateHistoryTree {
 	
 	/**
 	 * Helper function to get the size of the "tree header" in the tree-file
+	 * The nodes will use this offset to know where they should be in the file.
+	 * This should always be a multiple of 4K.
 	 */
 	protected static int getTreeHeaderSize() {
-		return    4			//int, Magic number
-				+ 4			//int BLOCKSIZE
-				+ 4			//int MAX_NB_CHILDREN
-				+ 8			//Timevalue (long) treeStart
-				+ 4 * 4;	//4 * int: nodeCount, depth, rootNode, latestLeaf
-			 /* = 36 */
+		return 4096;
 	}
 	
 	/**

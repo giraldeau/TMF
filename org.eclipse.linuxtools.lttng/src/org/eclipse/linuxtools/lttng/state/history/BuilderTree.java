@@ -41,9 +41,9 @@ class BuilderTree extends CurrentStateTree {
 			 * We will create a new SHTInterval object with the values we now have, and insert it in the SHTree.
 			 */
 			int index = conversionTable.get(path);
-			char[] oldValue = currentStateInfo.get(index);
+			Object oldValue = currentStateInfo.get(index);
 			Timevalue oldEventStartTime = currentStateStartTimes.get(index);
-			StateHistoryTreeInterval newInterval = new StateHistoryTreeInterval(index, oldValue, oldEventStartTime, eventTime);
+			StateHistoryTreeInterval newInterval = new StateHistoryTreeInterval(oldEventStartTime, eventTime, index, oldValue);
 			
 			stateHistTree.insertInterval(newInterval);
 			
