@@ -55,36 +55,6 @@ class StateHistoryTreeInterval {
 		this.valueStr = value;
 	}
 	
-//	/**
-//	 * "Reader" constructor, build a SHT-Interval object by reading 2 arrays of bytes.
-//	 * 
-//	 * @param dataEntry : byte array coming from the Data section of the block
-//	 * @param stringEntry : byte array coming from the String section of the block
-//	 */
-//	public StateHistoryTreeInterval(byte[] dataEntry, byte[] stringEntry) {
-//		assert(dataEntry.length == 28);
-//		assert(stringEntry[stringEntry.length - 1] == 0);	//variable-size arrays should always end with a "\0"
-//		
-//		byte[] longReader = new byte[8];
-//		byte[] intReader = new byte[4];
-//		
-//		/* Read "intervalStart" */
-//		System.arraycopy(dataEntry, 0, longReader, 0, 8);
-//		this.intervalStart = new Timevalue(ArrayHelper.byteArrayToLong(longReader));
-//		
-//		/* read "intervalEnd" */
-//		System.arraycopy(dataEntry, 8, longReader, 0, 8);
-//		this.intervalEnd = new Timevalue(ArrayHelper.byteArrayToLong(longReader));
-//		
-//		/* read "key" */
-//		System.arraycopy(dataEntry, 16, intReader, 0, 8);
-//		this.key = ArrayHelper.byteArrayToInt(intReader);
-//		
-//		/* read "value" (var. size) */
-//		stringEntry = (byte[]) ArrayHelper.resizeArray(stringEntry, stringEntry.length - 1);
-//		this.value = ArrayHelper.byteArraytoCharArray(stringEntry);
-//	}
-	
 	/**
 	 * Reader constructor. Builds the interval using a RandomAccessFile descriptor,
 	 * which is already positioned at the start of the Data Section of a node.
@@ -243,37 +213,6 @@ class StateHistoryTreeInterval {
 		}
 	}
 	
-	
-//	/**
-//	 * "Serialization" methods, used to put an interval in a format to be writable directly into a file.
-//	 * The DataEntry is what goes in the Data section of the block (fixed-size stuff and pointers)
-//	 * The StringsEntry contains whatever is of variable size
-//	 * 
-//	 * @return The relevant information, formatted as a byte array.
-//	 */
-//	
-//	public byte[] generateDataEntry() {
-//		/* The fixed-size entry contains the two Timevalues, the 'key' int and the "pointer"
-//		 * to the value in the Strings section. That "pointer" consists of two int's (offset and size).
-//		 * We'll reserve space [20-28], but the Node's toBytes() method will take care of that pointer
-//		 * (since only it knows about what the offset needs to be) */
-//		
-//		byte[] array = new byte[28];	//2 long's + 3 int's (2*8 + 3*4)
-//		System.arraycopy(intervalStart.toBytes(), 0, array, 0, 8);
-//		System.arraycopy(intervalEnd.toBytes(), 0, array, 8, 8);
-//		System.arraycopy(ArrayHelper.intToByteArray(key), 0, array, 16, 4);
-//		return array;
-//	}
-//	
-//	public byte[] generateStringEntry() {
-//		/* The variable-size entry only contains the 'value' char array, with a C-style "\0" (0'ed byte) at the end. */
-//		
-//		byte[] array = new byte[value.length * 2 + 1];
-//		System.arraycopy(ArrayHelper.charArrayToByteArray(value), 0, array, 0, value.length * 2);	// The 'value' array from the interval
-//		array[value.length * 2] = 0;		// the '\0'.
-//		return array;
-//		
-//	}
 }
 
 

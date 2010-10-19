@@ -70,94 +70,6 @@ class StateHistoryTreeNode {
 	}
 	
 	/**
-	 * "Reading" constructor. Will fill up the node information from a byte array that
-	 * was read from disk.
-	 */
-	/*
-	public StateHistoryTreeNode(StateHistoryTree tree, byte[] serializedNode) {
-		assert(serializedNode.length == containerTree.BLOCKSIZE);
-		
-		byte[] longReader = new byte[8];
-		byte[] intReader = new byte[4];
-		byte[] boolReader = new byte[1];
-		
-		int valueoffset;
-		int valuesize;
-		byte[] dataEntry = new byte[28];
-		byte[] stringEntry;
-		
-		this.containerTree = tree;
-		
-		System.arraycopy(serializedNode, 0, longReader, 0, 8);
-		this.nodeStart = new Timevalue(ArrayHelper.byteArrayToLong(longReader));
-		
-		System.arraycopy(serializedNode, 8, longReader, 0, 8);
-		this.nodeEnd = new Timevalue(ArrayHelper.byteArrayToLong(longReader));
-		
-		System.arraycopy(serializedNode, 16, intReader, 0, 4);
-		this.sequenceNumber = ArrayHelper.byteArrayToInt(intReader);
-		
-		System.arraycopy(serializedNode, 20, intReader, 0, 4);
-		this.parentSequenceNumber = ArrayHelper.byteArrayToInt(intReader);
-		
-		System.arraycopy(serializedNode, 24, intReader, 0, 4);
-		this.nbChildren = ArrayHelper.byteArrayToInt(intReader);
-		
-		System.arraycopy(serializedNode, 28, intReader, 0, 4);
-		this.intervalCount = ArrayHelper.byteArrayToInt(intReader);
-		
-		System.arraycopy(serializedNode, 32, boolReader, 0, 1);
-		this.isDone = ArrayHelper.byteArrayToBool(boolReader);
-		
-		System.arraycopy(serializedNode, 33, boolReader, 0, 1);
-		this.isFull = ArrayHelper.byteArrayToBool(boolReader);
-		
-		System.arraycopy(serializedNode, 34, intReader, 0, 4);
-		this.dataSectionEndOffset = ArrayHelper.byteArrayToInt(intReader);
-		
-		System.arraycopy(serializedNode, 38, intReader, 0, 4);
-		this.stringSectionOffset = ArrayHelper.byteArrayToInt(intReader);
-				
-		this.children = new int[containerTree.MAX_NB_CHILDREN];
-		for (int i=0; i < nbChildren; i++) {
-			System.arraycopy(serializedNode, 42 + i * 4, intReader, 0, 4);
-			children[i] = ArrayHelper.byteArrayToInt(intReader);
-		}
-		
-		this.childStart = new Timevalue[containerTree.MAX_NB_CHILDREN];
-		for (int i=0; i < nbChildren; i++) {
-			System.arraycopy(serializedNode, 42 + containerTree.MAX_NB_CHILDREN * 4 + i * 8, longReader, 0, 8);
-			childStart[i] = new Timevalue(ArrayHelper.byteArrayToLong(longReader));
-		}
-		
-		
-		this.intervals = new StateHistoryTreeInterval[intervalCount];
-		
-		/* We read the "offset" and "size" values, so we know where the stringEntry is located
-		 * We can then pass the two arrays (dateEntry[] and stringEntry[] to the SHTInterval constructor
-		 *
-		for ( int i=0; i < intervalCount; i++) {
-			/* Copy the dataEntry array *
-			System.arraycopy(serializedNode, this.GetHeaderSize() + i*28, dataEntry, 0, 28);
-			
-			/* Get the offset and valuesize values *
-			System.arraycopy(dataEntry, 20, intReader, 0, 4);
-			valueoffset = ArrayHelper.byteArrayToInt(intReader);
-			System.arraycopy(dataEntry, 24, intReader, 0, 4);
-			valuesize = ArrayHelper.byteArrayToInt(intReader);
-			
-			/* Copy the stringEntry array over, using the values we just gathered *
-			stringEntry = new byte[valuesize];
-			System.arraycopy(serializedNode, valueoffset, stringEntry, 0, valuesize);
-			
-			/* Construct the SHTInterval object *
-			intervals[i] = new StateHistoryTreeInterval(dataEntry, stringEntry);
-		}
-		
-	}
-	*/
-	
-	/**
 	 * Reader constructor v2. Reads the serialized node information directly from the file,
 	 * avoiding a useless copy.
 	 * (Is this (passing on the file descriptor) considered bad practice?)
@@ -247,35 +159,6 @@ class StateHistoryTreeNode {
 		assert( curStringsEntryPos == containerTree.BLOCKSIZE );
 			
 	}
-	
-	/*
-	/**
-	 * Copy constructor.
-	 * FIXME more elegant way to do this? maybe compare serialization vs. field-by-field copy
-	 * clone() not usable since we need to copy arrays. gg Java
-	 * @param otherNode : Node to copy stuff from
-	 *
-	protected StateHistoryTreeNode(StateHistoryTreeNode otherNode) {
-		this.containerTree = otherNode.containerTree;
-		this.nodeStart = otherNode.nodeStart;
-		this.nodeEnd = otherNode.nodeEnd;
-		this.sequenceNumber = otherNode.sequenceNumber;
-		this.parentSequenceNumber = otherNode.parentSequenceNumber;
-		this.nbChildren = otherNode.nbChildren;
-		
-		this.children = new int[containerTree.MAX_NB_CHILDREN];
-		System.arraycopy(otherNode.children, 0, this.children, 0, this.nbChildren);
-		
-		this.childStart = new Timevalue[containerTree.MAX_NB_CHILDREN];
-		System.arraycopy(otherNode.childStart, 0, this.childStart, 0, this.nbChildren);
-		
-		this.isDone = otherNode.isDone;
-		this.isFull = otherNode.isFull;
-		this.intervalCount = otherNode.intervalCount;
-		this.dataSectionEndOffset = otherNode.dataSectionEndOffset;
-		this.stringSectionOffset = otherNode.stringSectionOffset;
-	}
-	*/
 	
 	/**
 	 * Accessors
@@ -400,57 +283,6 @@ class StateHistoryTreeNode {
 		this.nodeEnd = endtime;
 		return;
 	}
-	
-	
-//	/**
-//	 * Serializing function. Will convert the node (header + intervals) to serialized form.
-//	 * @return The whole node in serialized form.
-//	 */
-//	public byte[] toBytes() {
-//		byte[] array = new byte[containerTree.BLOCKSIZE];
-//		
-//		//TODO: test and optimize?
-//		
-//		/* Header section */
-//		System.arraycopy(nodeStart.toBytes(), 0, array, 0, 8);
-//		System.arraycopy(nodeEnd.toBytes(), 0, array, 8, 8);
-//		System.arraycopy(ArrayHelper.intToByteArray(sequenceNumber), 0, array, 16, 4);
-//		System.arraycopy(ArrayHelper.intToByteArray(parentSequenceNumber), 0, array, 20, 4);
-//		System.arraycopy(ArrayHelper.intToByteArray(nbChildren), 0, array, 24, 4);
-//		System.arraycopy(ArrayHelper.intToByteArray(intervalCount), 0, array, 28, 4);
-//		System.arraycopy(ArrayHelper.boolToByteArray(isDone), 0, array, 32, 1);
-//		System.arraycopy(ArrayHelper.boolToByteArray(isFull), 0, array, 33, 1);
-//		System.arraycopy(ArrayHelper.intToByteArray(dataSectionEndOffset), 0, array, 34, 4);
-//		System.arraycopy(ArrayHelper.intToByteArray(stringSectionOffset), 0, array, 38, 4);
-//		for (int i=0; i < nbChildren; i++) {
-//			System.arraycopy(ArrayHelper.intToByteArray(children[i]), 0, array, 42 + i * 4, 4);
-//		}
-//		for (int i=0; i < nbChildren; i++) {
-//			System.arraycopy(childStart[i].toBytes(), 0, array, 42 + containerTree.MAX_NB_CHILDREN * 4 + i * 8, 8);
-//		}
-//		
-//		/* Intervals' data, which goes in the Data and String sections of the node */
-//		int curStringOffset = containerTree.BLOCKSIZE;
-//		
-//		for (int i=0; i < intervals.length; i++) {
-//			int valueSize = intervals[i].getValue().length * 2 + 1;		//"*2" because 1 char = 2 bytes, "+1" for the 0'ed byte at the end
-//			byte[] dataEntry = intervals[i].generateDataEntry();
-//			byte[] stringEntry = intervals[i].generateStringEntry();
-//			
-//			/* fill up the missing "pointer" information, that is 2 int's (offset and size of the 'value') */
-//			System.arraycopy(ArrayHelper.intToByteArray(curStringOffset-valueSize), 0, dataEntry, 20, 4); //the offset
-//			System.arraycopy(ArrayHelper.intToByteArray(valueSize), 0, dataEntry, 24, 4); //the size
-//			
-//			/* Write the information about this interval in the full node 'array' */
-//			System.arraycopy(dataEntry, 0, array, this.GetHeaderSize() + i*dataEntry.length, dataEntry.length);
-//			System.arraycopy(stringEntry, 0, array, curStringOffset - stringEntry.length, stringEntry.length);
-//			
-//			/* We update the curStringOffset, so the next variable-sized entry gets written BEFORE the one we just wrote. */
-//			curStringOffset -= stringEntry.length;
-//		}
-//		
-//		return array;
-//	}
 	
 	/**
 	 * The method to fill up the stateInfo (passed on from the Current State Tree when
