@@ -7,10 +7,9 @@ package org.eclipse.linuxtools.lttng.state.history;
 import java.util.Hashtable;
 import java.util.Vector;
 
+import org.eclipse.linuxtools.tmf.event.TmfTimestamp;
+
 /**
- * This class provides the interface to the "generic state store" with the external
- * application. In the implementation here, the app will pass on Strings and char[]'s
- * to be stored/retrieved.
  * 
  * Here in TMF, the Strings will contain the "path" in the state system's /proc-like tree, for example:
  * "System/Processes/PID150/ExecMode"
@@ -45,23 +44,33 @@ public class CurrentStateTree {
 
 	
 	/**
-	 * Default constructor
+	 * Default constructor, with pre-defined configuration values
 	 */
-	public CurrentStateTree() {
-		//FIXME use some starting values. get them from somewhere?
-		conversionTable = new Hashtable<String, Integer>();
-		currentStateInfo = new Vector<StateValue>();
+	public CurrentStateTree(String newTreeFileName) {
+		this(newTreeFileName, new TmfTimestamp(0), 64*1024, 10, 100);
+	}
+	
+	/**
+	 * Constructor for when we're building a new tree from scratch
+	 * 
+	 * @param newTreeFileName The "name" of the tree, which will be the filename on disk
+	 * @param treeStart The minimum Timestamp that will be stored in the tree
+	 * @param blockSize The size of each node-block in the tree file. Should be a multiple of 4K bytes
+	 * @param maxChildren The max. number of children every node (other than the leafs) can have
+	 * @param cacheSize The size of the cache to use, in number of nodes (not a size in bytes!)
+	 */
+	public CurrentStateTree(String newTreeFileName, TmfTimestamp treeStart,
+							int blockSize, int maxChildren, int cacheSize) {
 		
+		//FIXME use some good starting values. get them from somewhere?
+		this.conversionTable = new Hashtable<String, Integer>();
+		this.currentStateInfo = new Vector<StateValue>();
 		
-		/* Default values*/
-		//TODO add a constructor in which we can specify those
-		String treeFileName = "test";
-		TimeValue treeStart = new TimeValue(0);
-		int treeBlockSize = 64*1024;
-		int treeMaxChildren = 10;
-		int treeCacheSize = 100;
-		
-		stateHistTree = new StateHistoryTree(treeFileName, treeStart, treeBlockSize, treeMaxChildren, treeCacheSize);
+		this.stateHistTree = new StateHistoryTree( newTreeFileName, (TimeValue) treeStart, blockSize, maxChildren, cacheSize);
+	}
+	
+	
+	public CurrentStateTree(String existingFileName, int cacheSize) {
 		
 	}
 	
@@ -71,7 +80,7 @@ public class CurrentStateTree {
 	 * important information from the Builder Tree
 	 * @param bt : The BuilderTree we want to copy (sans the Timevalue vector)
 	 */
-	public CurrentStateTree(BuilderTree bt) {
+	protected CurrentStateTree(BuilderTree bt) {
 		this.conversionTable = new Hashtable<String, Integer>( bt.conversionTable.size() );  //FIXME useful/correct to do this?
 		bt.conversionTable.putAll(this.conversionTable);
 		

@@ -14,7 +14,7 @@ import java.util.Vector;
  * @author alexmont
  *
  */
-public class StateHistoryTree {
+class StateHistoryTree {
 	
 	/**
 	 * Configuration constants
@@ -39,6 +39,7 @@ public class StateHistoryTree {
 	
 	/**
 	 * Basic constructor : instantiate a new empty tree from scratch
+	 * 
 	 * @param newFileName : Name/path of the tree-file to create
 	 * @param start : origin (minimum) timestamp of the tree
 	 * @param blockSize : desired size (bytes) of each block on disk. Should be a multiple of 4096
