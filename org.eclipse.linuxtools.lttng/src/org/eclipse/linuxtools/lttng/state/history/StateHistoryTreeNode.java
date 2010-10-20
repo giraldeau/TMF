@@ -24,15 +24,15 @@ class StateHistoryTreeNode {
 	
 	private StateHistoryTree containerTree;		/* Tree to which tree this node belongs (for config. constants) */
 	
-	private Timevalue nodeStart;		/* Start time of this node */
-	private Timevalue nodeEnd;			/* End time of this node */
+	private TimeValue nodeStart;		/* Start time of this node */
+	private TimeValue nodeEnd;			/* End time of this node */
 	
 	private int sequenceNumber;			/* Seq. number of this node */
 	private int parentSequenceNumber;	/* Seq. number of the parent node. If = -1, that means it's the root node */
 	
 	private int nbChildren;				/* Nb. of children this node has */
 	private int[] children;				/* Seq. numbers of the children nodes (size = MAX_NB_CHILDREN) */
-	private Timevalue[] childStart;		/* Start times of each of the children (size = MAX_NB_CHILDREN) */
+	private TimeValue[] childStart;		/* Start times of each of the children (size = MAX_NB_CHILDREN) */
 	private boolean isDone;				/* Is there newer nodes (time-wise) to the right of this one? */
 
 	private boolean isFull;				/* Is this node full? (no more room for intervals) */
@@ -45,7 +45,7 @@ class StateHistoryTreeNode {
 	/**
 	 * Initial constructor. Only use this to initialize a new EMPTY node
 	 */
-	public StateHistoryTreeNode(StateHistoryTree tree, int seqNumber, int parentSeqNumber, Timevalue start) {
+	public StateHistoryTreeNode(StateHistoryTree tree, int seqNumber, int parentSeqNumber, TimeValue start) {
 		this.containerTree = tree;
 		this.nodeStart = start;
 		this.sequenceNumber = seqNumber;
@@ -60,7 +60,7 @@ class StateHistoryTreeNode {
 		 * want to reserve that space in the node's header. this.nbChildren will tell us
 		 * how many relevant entries there are in those tables. */
 		this.children = new int[containerTree.MAX_NB_CHILDREN];
-		this.childStart = new Timevalue[containerTree.MAX_NB_CHILDREN];
+		this.childStart = new TimeValue[containerTree.MAX_NB_CHILDREN];
 		
 		this.intervalCount = 0;
 		
@@ -83,8 +83,8 @@ class StateHistoryTreeNode {
 		
 		try {
 			/* Read the header */
-			nodeStart = new Timevalue(desc.readLong());
-			nodeEnd = new Timevalue(desc.readLong());
+			nodeStart = new TimeValue(desc.readLong());
+			nodeEnd = new TimeValue(desc.readLong());
 			sequenceNumber = desc.readInt();
 			parentSequenceNumber = desc.readInt();
 			nbChildren = desc.readInt();
@@ -98,9 +98,9 @@ class StateHistoryTreeNode {
 				children[i] = desc.readInt();
 			}
 			
-			this.childStart = new Timevalue[containerTree.MAX_NB_CHILDREN];
+			this.childStart = new TimeValue[containerTree.MAX_NB_CHILDREN];
 			for (int i=0; i < nbChildren; i++) {
-				childStart[i] = new Timevalue(desc.readLong());
+				childStart[i] = new TimeValue(desc.readLong());
 			}
 			
 			/* Read the intervals information */
@@ -163,15 +163,15 @@ class StateHistoryTreeNode {
 	/**
 	 * Accessors
 	 */
-	public Timevalue getNodeStart() {
+	public TimeValue getNodeStart() {
 		return nodeStart;
 	}
 	
-	public Timevalue getNodeEnd() {
+	public TimeValue getNodeEnd() {
 		if ( this.isDone ) {
 			return nodeEnd;
 		} else {
-			return new Timevalue(0);
+			return new TimeValue(0);
 		}
 	}
 	
@@ -199,11 +199,11 @@ class StateHistoryTreeNode {
 		return children[nbChildren - 1];
 	}
 	
-	public Timevalue getChildStart(int index) {
+	public TimeValue getChildStart(int index) {
 		return childStart[index];
 	}
 	
-	public Timevalue getLatestChildStart() {
+	public TimeValue getLatestChildStart() {
 		return childStart[nbChildren - 1];
 	}
 	
@@ -262,7 +262,7 @@ class StateHistoryTreeNode {
 	 * @param seqNumber : Sequence number of the new child
 	 * @param start : Start-time of that child
 	 */
-	public void linkNewChild(int childSeqNumber, Timevalue start) {
+	public void linkNewChild(int childSeqNumber, TimeValue start) {
 		assert( this.nbChildren < containerTree.MAX_NB_CHILDREN );
 		
 		this.children[nbChildren] = childSeqNumber;
@@ -277,7 +277,7 @@ class StateHistoryTreeNode {
 	 * @param node : The node to "close" off
 	 * @param endtime : The nodeEnd time that the node will have
 	 */
-	public void closeThisNode(Timevalue endtime) {
+	public void closeThisNode(TimeValue endtime) {
 		//TODO sort the intervals by end time here?
 		this.isDone = true;
 		this.nodeEnd = endtime;
@@ -292,7 +292,7 @@ class StateHistoryTreeNode {
 	 * @param stateInfo : the same stateInfo that comes from SHT's doQuery()
 	 * @param t : the Timevalue for which the query is for. Only return intervals that intersect t.
 	 */
-	public void getInfoFromNode(Vector<Object> stateInfo, Timevalue t) {
+	public void getInfoFromNode(Vector<StateValue> stateInfo, TimeValue t) {
 		/* 
 		 * TODO: this here could be optimised (to half the time, on average) if we could
 		 * guarantee that the intervals are sorted chronologically.
@@ -304,7 +304,7 @@ class StateHistoryTreeNode {
 			/* if:  t intersects intervals[i] then: write its value in stateInfo */
 			if ( t.compareTo( intervals.get(i).getEnd(), false) <= 0 ) {
 				if ( t.compareTo( intervals.get(i).getStart(), false) >= 0 ) {
-					stateInfo.set( intervals.get(i).getKey(), intervals.get(i).getValueType() );
+					stateInfo.set( intervals.get(i).getKey(), intervals.get(i).getValue() );
 				}
 			}
 		}

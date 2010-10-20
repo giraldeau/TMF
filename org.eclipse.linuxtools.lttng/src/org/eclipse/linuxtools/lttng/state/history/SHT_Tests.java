@@ -28,7 +28,7 @@ class SHT_Tests {
 	 * @param line
 	 */
 	private static StateHistoryTreeInterval readIntervalFromFile(String line){
-		Timevalue startTime, endTime;
+		TimeValue startTime, endTime;
 		line.trim();
 		String[] components = line.split(" ");
 		
@@ -36,16 +36,12 @@ class SHT_Tests {
 		 * We need to remove those '.' since we directly use the number of nanoseconds
 		 * (oh god so slow...) */
 		String[] startTimeComponents = components[0].split("\\.");
-		startTime = new Timevalue( Long.parseLong( startTimeComponents[0] + startTimeComponents[1] ) );
+		startTime = new TimeValue( Long.parseLong( startTimeComponents[0] + startTimeComponents[1] ) );
 		String[] endTimeComponents = components[1].split("\\.");
-		endTime = new Timevalue( Long.parseLong( endTimeComponents[0] + endTimeComponents[1] ) );
+		endTime = new TimeValue( Long.parseLong( endTimeComponents[0] + endTimeComponents[1] ) );
 		
-		/* Using the SHTInterval constructor: (int key, char[] value, Timevalue intervalStart, Timevalue intervalEnd) */
-		return new StateHistoryTreeInterval(	components[2].hashCode(),
-												components[3].toCharArray(),
-												startTime,
-												endTime
-											);
+		/* Using the SHTInterval constructor: (Timevalue intervalStart, Timevalue intervalEnd, int key, String value ) */
+		return new StateHistoryTreeInterval( startTime, endTime, components[2].hashCode(), components[3] );
 	}
 	
 	/**
@@ -56,7 +52,7 @@ class SHT_Tests {
 		String filePath = intervalsDataPath + "testin-" + n;
 		String line;
 		long testStartTime, testEndTime;
-		StateHistoryTree tree = new StateHistoryTree(treefilePath, new Timevalue(0), 64*1024, 10, 100);
+		StateHistoryTree tree = new StateHistoryTree(treefilePath, new TimeValue(0), 64*1024, 10, 100);
 		
 		System.out.println("Beginning reading the test intervals file.");
 		testStartTime = System.nanoTime();
@@ -88,7 +84,6 @@ class SHT_Tests {
 						  );
 		
 	}
-	
 	
 	
 	public static void main(String[] args) {

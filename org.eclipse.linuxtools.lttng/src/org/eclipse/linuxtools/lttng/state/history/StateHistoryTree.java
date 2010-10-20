@@ -29,7 +29,7 @@ public class StateHistoryTree {
 	
 	private StateHistoryTreeIO treeIO;		/* Reader/writer/cacher object */
 	
-	private final Timevalue treeStart;		/* Beginning timestamp of the tree (lowest time possible) */
+	private final TimeValue treeStart;		/* Beginning timestamp of the tree (lowest time possible) */
 	
 	private int nodeCount;					/* How many nodes exist in this tree, total */
 	private int depth;						/* How many "levels" there are */
@@ -45,7 +45,7 @@ public class StateHistoryTree {
 	 * @param maxChildren : Max number of children per node.
 	 * @param cacheSize : (not a "size" in bytes!) Size of the cache, in number of nodes
 	 */
-	public StateHistoryTree(String newTreeFileName, Timevalue start, int blockSize, int maxChildren, int cacheSize) {
+	public StateHistoryTree(String newTreeFileName, TimeValue start, int blockSize, int maxChildren, int cacheSize) {
 		/* Simple assertion to make sure we have enough place in the 0th block for the tree configuration */
 		assert( blockSize >= getTreeHeaderSize() );
 		
@@ -82,7 +82,7 @@ public class StateHistoryTree {
 		
 		this.BLOCKSIZE = desc.readInt();
 		this.MAX_NB_CHILDREN = desc.readInt();
-		this.treeStart = new Timevalue(desc.readLong());
+		this.treeStart = new TimeValue(desc.readLong());
 		
 		this.nodeCount = desc.readInt();
 		this.depth = desc.readInt();
@@ -126,7 +126,7 @@ public class StateHistoryTree {
 	/**
 	 * Accessors
 	 */
-	protected Timevalue getTreeStart() {
+	protected TimeValue getTreeStart() {
 		return treeStart;
 	}
 	
@@ -204,7 +204,7 @@ public class StateHistoryTree {
 	 * @param start : Start time of this node
 	 * @return The newly created node, duh
 	 */
-	private StateHistoryTreeNode initNewNode(int parentSeqNumber, Timevalue start) {
+	private StateHistoryTreeNode initNewNode(int parentSeqNumber, TimeValue start) {
 		StateHistoryTreeNode newNode = new StateHistoryTreeNode(this, this.nodeCount, parentSeqNumber, start);
 		this.nodeCount++;
 		/* Let the IO/caching system know we added a node so it needs to update its lists */
@@ -219,7 +219,7 @@ public class StateHistoryTree {
 	 * @param start : Start time of the new node
 	 * @return the newly-created node
 	 */
-	private StateHistoryTreeNode addChildNode(int parentSeqNumber, Timevalue start) {
+	private StateHistoryTreeNode addChildNode(int parentSeqNumber, TimeValue start) {
 		StateHistoryTreeNode parentNode = treeIO.readNode(parentSeqNumber);
 		StateHistoryTreeNode newNode = initNewNode(parentSeqNumber, start);
 		
@@ -239,7 +239,7 @@ public class StateHistoryTree {
 	 * @param start : Start time of each newly-created node
 	 * @return The lowest-level new node that was created
 	 */
-	private StateHistoryTreeNode addBranch(int parentSeqNumber, int depth, Timevalue start) {
+	private StateHistoryTreeNode addBranch(int parentSeqNumber, int depth, TimeValue start) {
 		StateHistoryTreeNode parentNode = treeIO.readNode(parentSeqNumber);
 		StateHistoryTreeNode newNode = null;
 		
@@ -259,7 +259,7 @@ public class StateHistoryTree {
 	 * @param splitTime : Timevalue that will separate the new branch from the last
 	 * @return The new latest leaf of the tree
 	 */
-	private StateHistoryTreeNode addNewRootNode(Timevalue splitTime) {
+	private StateHistoryTreeNode addNewRootNode(TimeValue splitTime) {
 		StateHistoryTreeNode oldRootNode, newRootNode, newLatestNode;
 		
 		oldRootNode = treeIO.readNode(this.rootNode);
@@ -293,7 +293,7 @@ public class StateHistoryTree {
 	 * @param node : The node to "close" off
 	 * @param endtime : The nodeEnd time that the closed node(s) will have
 	 */
-	private void closeNode(StateHistoryTreeNode node, Timevalue endtime) {
+	private void closeNode(StateHistoryTreeNode node, TimeValue endtime) {
 		node.closeThisNode(endtime);
 		treeIO.writeNode(node);
 		
@@ -313,7 +313,7 @@ public class StateHistoryTree {
 	 * @param splitTime : Timevalue that will separate the new node (or whole branch, depending) from the old one.
 	 * @return The newly-created sibling node we so desperately asked for.
 	 */
-	private StateHistoryTreeNode addSiblingNode(StateHistoryTreeNode refNode, Timevalue splitTime) {
+	private StateHistoryTreeNode addSiblingNode(StateHistoryTreeNode refNode, TimeValue splitTime) {
 		int level = 1;
 		StateHistoryTreeNode parentNode;
 		
@@ -366,7 +366,7 @@ public class StateHistoryTree {
 	 * @param stateInfo : the currentStateInfo of the CurrentStateTree, which this method will fill up
 	 * @param t : the timestamp for which we want the query
 	 */
-	public void doQuery(Vector<Object> stateInfo, Timevalue t) {
+	public void doQuery(Vector<StateValue> stateInfo, TimeValue t) {
 		int potentialNext = 0;
 		/* We start by reading the information in the root node */
 		StateHistoryTreeNode currentNode = treeIO.readNode(rootNode);

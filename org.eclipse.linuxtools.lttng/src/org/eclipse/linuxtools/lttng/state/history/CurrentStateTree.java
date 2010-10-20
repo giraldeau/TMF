@@ -36,10 +36,10 @@ import java.util.Vector;
  * @author alexmont
  *
  */
-class CurrentStateTree {
+public class CurrentStateTree {
 	
 	protected Hashtable<String, Integer> conversionTable;
-	protected Vector<Object> currentStateInfo;				/* currentStateInfo.size() = number of different entries we've seen so far */
+	protected Vector<StateValue> currentStateInfo;				/* currentStateInfo.size() = number of different entries we've seen so far */
 	
 	protected StateHistoryTree stateHistTree;
 
@@ -50,13 +50,13 @@ class CurrentStateTree {
 	public CurrentStateTree() {
 		//FIXME use some starting values. get them from somewhere?
 		conversionTable = new Hashtable<String, Integer>();
-		currentStateInfo = new Vector<Object>();
+		currentStateInfo = new Vector<StateValue>();
 		
 		
 		/* Default values*/
 		//TODO add a constructor in which we can specify those
 		String treeFileName = "test";
-		Timevalue treeStart = new Timevalue(0);
+		TimeValue treeStart = new TimeValue(0);
 		int treeBlockSize = 64*1024;
 		int treeMaxChildren = 10;
 		int treeCacheSize = 100;
@@ -75,7 +75,7 @@ class CurrentStateTree {
 		this.conversionTable = new Hashtable<String, Integer>( bt.conversionTable.size() );  //FIXME useful/correct to do this?
 		bt.conversionTable.putAll(this.conversionTable);
 		
-		this.currentStateInfo = new Vector<Object>( bt.currentStateInfo.size() );
+		this.currentStateInfo = new Vector<StateValue>( bt.currentStateInfo.size() );
 		//We do not care about the data in that vector though, we'll get our own.
 		
 		/* Both objects still need to point to the same State History Tree: */
@@ -89,7 +89,7 @@ class CurrentStateTree {
 	 * 
 	 * @param t Target Time
 	 */
-	public void getStateAtTime(Timevalue t) {
+	public void getStateAtTime(TimeValue t) {
 		stateHistTree.doQuery(currentStateInfo, t);
 		/* 
 		 * TODO if we ever want to support getting state WHILE building a SHT (streaming, etc)

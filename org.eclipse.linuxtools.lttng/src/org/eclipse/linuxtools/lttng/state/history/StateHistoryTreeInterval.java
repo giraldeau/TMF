@@ -17,69 +17,69 @@ class StateHistoryTreeInterval {
 	/**
 	 * Fields
 	 */
-	private Timevalue intervalStart;
-	private Timevalue intervalEnd;
+	private TimeValue intervalStart;
+	private TimeValue intervalEnd;
 	
 	/* This is the key used to uniquely identify a given state entry */
 	private int key;
 	
-	private byte type;			/* type of the 'value': 0 = int, 1 = string */
-	private int valueInt;		/* if type = int, this will store the value */
-	private String valueStr;	/* if type = string, then this is a variable-size string.
-	 							   if type = something else, then it's undefined */
+	private StateValue value;
+	
 	
 	/**
 	 * Standard constructors, with the value being either of type int or string
 	 */
-	public StateHistoryTreeInterval(Timevalue intervalStart, Timevalue intervalEnd,
-									int key, int value) {
-		
+	public StateHistoryTreeInterval(TimeValue intervalStart, TimeValue intervalEnd,
+									int key, int valueAsInt) {
 		this.intervalStart = intervalStart;
 		this.intervalEnd = intervalEnd;
 		this.key =  key;
-		
-		this.type = 0;
-		this.valueInt = value;
-		this.valueStr = null;
+		this.value = new StateValue(valueAsInt);
 	}
 	
-	public StateHistoryTreeInterval(Timevalue intervalStart, Timevalue intervalEnd,
-									int key, String value) {
-		
+	public StateHistoryTreeInterval(TimeValue intervalStart, TimeValue intervalEnd,
+									int key, String valueAsString) {
 		this.intervalStart = intervalStart;
 		this.intervalEnd = intervalEnd;
 		this.key =  key;
-		
-		this.type = 1;
-		this.valueInt = -1;
-		this.valueStr = value;
+		this.value = new StateValue(valueAsString);
+	}
+	
+	/**
+	 * And for when the StateValue object is already instantiated:
+	 */
+	public StateHistoryTreeInterval(TimeValue intervalStart, TimeValue intervalEnd,
+									int key, StateValue value) {
+		this.intervalStart = intervalStart;
+		this.intervalEnd = intervalEnd;
+		this.key = key;
+		this.value = value;
 	}
 	
 	/**
 	 * Reader constructor. Builds the interval using a RandomAccessFile descriptor,
-	 * which is already positioned at the start of the Data Section of a node.
+	 * which is already positioned at the start of the Data Section entry in a block.
 	 */
 	public StateHistoryTreeInterval(RandomAccessFile desc, long nodeStartPosition) {
 		int valueOffset, valueSize;
+		byte valueType;
 		byte valueArray[];
 		long position;		/* To save the descriptor's position in the file, so we can restore it for the next read */
 		
 		try {
 			/* Read the Data Section entry */
-			this.intervalStart = new Timevalue(desc.readLong());
-			this.intervalEnd = new Timevalue(desc.readLong());
+			this.intervalStart = new TimeValue(desc.readLong());
+			this.intervalEnd = new TimeValue(desc.readLong());
 			this.key = desc.readInt();
 			
 			/* Read the 'type' of the value, then react accordingly */
-			this.type = desc.readByte();
-			if ( type == 0 ) {
+			valueType = desc.readByte();
+			if ( valueType == 0 ) {
 			/* the type of ValueOffset is 'value' */
-				this.valueInt = desc.readInt();
-				this.valueStr = null;
+				this.value = new StateValue(desc.readInt());
 				
-			} else if ( type == 1 ) {
+			} else if ( valueType == 1 ) {
 			/* the type is 'offset' */
-				this.valueInt = -1;
 				valueOffset = desc.readInt();
 				
 				/* Go read the corresponding entry in the Strings section of the block */
@@ -91,7 +91,7 @@ class StateHistoryTreeInterval {
 				for (int i=0; i < valueSize; i++) {
 					valueArray[i] = desc.readByte();
 				}
-				this.valueStr = new String(valueArray);
+				this.value = new StateValue( new String(valueArray) );
 				
 				/* Confirm the 0'ed byte at the end */
 				//FIXME make only used when in debug mode
@@ -132,25 +132,25 @@ class StateHistoryTreeInterval {
 		desc.writeLong(intervalStart.getValue());
 		desc.writeLong(intervalEnd.getValue());
 		desc.writeInt(key);
-		desc.writeByte(type);
+		desc.writeByte(value.getType());
 		
-		if ( type == 0 ) {
+		if ( value.getType() == 0 ) {
 		/* We write the 'valueOffset' field as a straight value */
-			desc.writeInt(valueInt);
+			desc.writeInt(value.getValueInt());
 			return 0; /* we didn't use a Strings section entry */
 		
-		} else if ( type == 1 ) {
+		} else if ( value.getType() == 1 ) {
 		/* we use the valueOffset as an offset. */
 			desc.writeInt(offsetForStringEntry);
 			position = desc.getFilePointer();
 			desc.seek( nodeStartPosition + (long) offsetForStringEntry );
 			
 			/* write the Strings entry (1st byte = size, then the bytes, then the 0) */
-			desc.writeByte(valueStr.length());
-			desc.write(valueStr.getBytes());
+			desc.writeByte(value.getValueStr().length());
+			desc.write(value.getValueStr().getBytes());
 			desc.write(0);	//FIXME only for debug mode...
 			desc.seek(position);
-			return valueStr.length() + 2;	/* +1 size at the start, +1 for the 0 at the end */
+			return value.getValueStr().length() + 2;	/* +1 size at the start, +1 for the 0 at the end */
 		
 		} else {
 		/* unrecognized type */
@@ -164,11 +164,11 @@ class StateHistoryTreeInterval {
 	/**
 	 * Accessors
 	 */
-	public Timevalue getStart() {
+	public TimeValue getStart() {
 		return intervalStart;
 	}
 	
-	public Timevalue getEnd() {
+	public TimeValue getEnd() {
 		return intervalEnd;
 	}
 	
@@ -176,18 +176,8 @@ class StateHistoryTreeInterval {
 		return key;
 	}
 	
-	public byte getValueType() {
-		return type;
-	}
-	
-	public int getValueInt() {
-		assert( type == 0 );
-		return valueInt;
-	}
-	
-	public String getValueStr() {
-		assert( type == 1 );
-		return valueStr;
+	public StateValue getValue() {
+		return value;
 	}
 	
 	/**
@@ -198,11 +188,11 @@ class StateHistoryTreeInterval {
 	}
 	
 	public int getStringsEntrySize() {
-		if ( type == 0) {
+		if ( value.getType() == 0) {
 			return 0;
 			
-		} else if ( type == 1 ) {
-			return valueStr.length() + 2;
+		} else if ( value.getType() == 1 ) {
+			return value.getValueStr().length() + 2;
 			/* (+1 for the first byte indicating the size, +1 for the 0'ed byte) */
 			//TODO only +1 in non-debug mode
 			
