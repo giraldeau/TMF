@@ -4,7 +4,7 @@
 
 package org.eclipse.linuxtools.lttng.state.history;
 
-import org.eclipse.linuxtools.lttng.event.LttngTimestamp;
+import org.eclipse.linuxtools.tmf.event.TmfTimestamp;
 
 /**
  * The basic Time-value unit used in the State Tree.
@@ -13,7 +13,7 @@ import org.eclipse.linuxtools.lttng.event.LttngTimestamp;
  * @author alexmont
  *
  */
-class TimeValue extends LttngTimestamp {
+class TimeValue extends TmfTimestamp {
 	
 	/**
 	 * The three fields inherited from TmfTimestamp are:

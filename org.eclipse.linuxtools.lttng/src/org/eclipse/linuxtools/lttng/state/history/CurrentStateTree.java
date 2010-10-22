@@ -7,8 +7,6 @@ package org.eclipse.linuxtools.lttng.state.history;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import org.eclipse.linuxtools.tmf.event.TmfTimestamp;
-
 /**
  * 
  * Here in TMF, the Strings will contain the "path" in the state system's /proc-like tree, for example:
@@ -37,17 +35,27 @@ import org.eclipse.linuxtools.tmf.event.TmfTimestamp;
  */
 public class CurrentStateTree {
 	
-	protected Hashtable<String, Integer> conversionTable;
-	protected Vector<StateValue> currentStateInfo;				/* currentStateInfo.size() = number of different entries we've seen so far */
+	/* References to the underneath State History and Builder trees */
+	private StateHistoryTree stateHistTree;
+	private BuilderTree builderTree;
 	
-	protected StateHistoryTree stateHistTree;
-
+	/* The next two constructs implement the "quark table" to convert to and from the dash-separated paths */
+	private Hashtable<String, Integer> conversionTable;
+	private Vector<String> reverseConversionTable;
+	
+	/* The state info vector, which will contain the "system state" at one given requested time
+	 * currentStateInfo.size() = number of different entries we've seen so far */
+	private Vector<StateValue> currentStateInfo;
+	
+	/* Finally, the root of the /proc-like filesystem tree, which is the human-usable index to read the stateInfo */
+	private Path root;
+	
 	
 	/**
 	 * Default constructor, with pre-defined configuration values
 	 */
 	public CurrentStateTree(String newTreeFileName) {
-		this(newTreeFileName, new TmfTimestamp(0), 64*1024, 10, 100);
+		this(newTreeFileName, new TimeValue(0), 64*1024, 10, 100);
 	}
 	
 	/**
@@ -59,58 +67,159 @@ public class CurrentStateTree {
 	 * @param maxChildren The max. number of children every node (other than the leafs) can have
 	 * @param cacheSize The size of the cache to use, in number of nodes (not a size in bytes!)
 	 */
-	public CurrentStateTree(String newTreeFileName, TmfTimestamp treeStart,
+	public CurrentStateTree(String newTreeFileName, TimeValue treeStart,
 							int blockSize, int maxChildren, int cacheSize) {
 		
 		//FIXME use some good starting values. get them from somewhere?
 		this.conversionTable = new Hashtable<String, Integer>();
+		this.reverseConversionTable = new Vector<String>();
 		this.currentStateInfo = new Vector<StateValue>();
 		
-		this.stateHistTree = new StateHistoryTree( newTreeFileName, (TimeValue) treeStart, blockSize, maxChildren, cacheSize);
+		this.stateHistTree = new StateHistoryTree( newTreeFileName, treeStart, blockSize, maxChildren, cacheSize);
+		this.builderTree = new BuilderTree( stateHistTree );
+		
+		this.root = new Path("root", -1);
 	}
 	
-	
+	/**
+	 * Constructor for loading an existing tree file on disk
+	 * 
+	 * @param existingFileName
+	 * @param cacheSize Cache size to use, in number of nodes
+	 */
 	public CurrentStateTree(String existingFileName, int cacheSize) {
+		//TODO NYI
+	}
+	
+	/**
+	 * Accessors
+	 */
+	public StateValue getStateValue(String path) {
+		return currentStateInfo.get( conversionTable.get(path) );
+	}
+	
+	/**
+	 * A state-changing event was passed on from the Interface.
+	 * We need to check if it's in the quark database, in the /proc-like FS,
+	 * and then pass it on to the Builder Tree.
+	 * 
+	 * @param pathAsString Dash-separated string we received from SHInterface
+	 * @param value The StateValue (the interface built for us) we need to associate to this entry
+	 * @param eventTime The timestamp of this state-change
+	 */
+	protected void readStateChange(String pathAsString, StateValue value, TimeValue eventTime) {
+		
+		if ( conversionTable.containsKey(pathAsString)) {
+			/* We have seen this entry name before, it should (hopefully) be in all the tables already.
+			 * We only need to pass it to the Builder Tree so it can do its thing with it. */
+			builderTree.processStateChange( conversionTable.get(pathAsString), value, eventTime );
+			
+		} else {
+			/* The request entry is not in the tables. So we add it to them, THEN pass it on to the builder tree. */
+			builderTree.processStateChange( processPath(pathAsString), value, eventTime );
+		}
 		
 	}
 	
 	/**
-	 * "Downgrading" constructor, with which we build a CST from a Builder Tree.
-	 * It's important to use the getStateAtTime from a CST, or else we'd mess up the
-	 * important information from the Builder Tree
-	 * @param bt : The BuilderTree we want to copy (sans the Timevalue vector)
+	 * Function that will be called when we see a new entry in the quark table, which means we
+	 * also need a new entry (or more than one) in the database.
+	 * 
+	 * @param pathAsString The dash-separated string that got passed on from the StateHistoryInterface.
+	 * @return The integer representation of the (complete) String in the quark table
 	 */
-	protected CurrentStateTree(BuilderTree bt) {
-		this.conversionTable = new Hashtable<String, Integer>( bt.conversionTable.size() );  //FIXME useful/correct to do this?
-		bt.conversionTable.putAll(this.conversionTable);
+	private int processPath(String pathAsString) {
+		Path currentPath = root;
+		String currentString;
+		String[] components = pathAsString.split("/");
 		
-		this.currentStateInfo = new Vector<StateValue>( bt.currentStateInfo.size() );
-		//We do not care about the data in that vector though, we'll get our own.
-		
-		/* Both objects still need to point to the same State History Tree: */
-		this.stateHistTree = bt.stateHistTree;
+		for ( int i=0; i < components.length; i++) {
+			/* Generate the partial String we are now processing */
+			currentString = "";
+			for ( int j=0; j <= i; j++ ) {
+				currentString += "/" + components[j];
+			}
+			
+			if ( !conversionTable.containsKey(currentString) ) {
+				/* We need to add this partial path to the tables */
+				currentStateInfo.add(null);		/* just to increment the size */
+				conversionTable.put(currentString, currentStateInfo.size() );
+				reverseConversionTable.add(currentString);
+				currentPath.addSubPath(components[i], currentStateInfo.size() );
+			}
+			currentPath = currentPath.getSubPath(components[i]);
+		}
+		return currentStateInfo.size();
 	}
-	
 	
 	/**
 	 * This function is used to query the State History Tree, which will set() the currentStateInfo to
-	 * the recorded values at the given targetTime
+	 * the recorded values at the given targetTime.
+	 * If the Builder Tree is active, we will also query it for information which might not yet be in
+	 * SHT (which is the case when doing live trace reading).
 	 * 
 	 * @param t Target Time
 	 */
 	public void getStateAtTime(TimeValue t) {
 		stateHistTree.doQuery(currentStateInfo, t);
-		/* 
-		 * TODO if we ever want to support getting state WHILE building a SHT (streaming, etc)
-		 * then *here* we should add a way to get the state information from the currently-running
-		 * BuilderTree too, since the currently-active information won't be stored in the State History yet.
-		 */
+		
+		if ( builderTree.isActive() ) {
+			builderTree.doQuery(currentStateInfo, t);
+		}
 	}
 	
 }
 
-
-
+/**
+ * A "Path" is like both a file and a directory in the /proc-like filesystem used to represent
+ * the State at any given time.
+ * 
+ * @author alexmont
+ *
+ */
+class Path {
+	
+	/* =~ directory/file name */
+	private String name;
+	
+	/* =~ file content. The key = the integer representation of the string representing this path */
+	private int key;
+	
+	/* The sub-directories of this directory, if any */
+	private Vector<Path> contents;
+	
+	/* The lookup table, to make looking up sub-directories faster
+	 * The String = the name of only the sub-directory (not the whole path).
+	 * The Integer = the index in this Path's contents vector */
+	private Hashtable<String, Integer> lookup;
+	//FIXME is it worth having this used only when we start having a lot of entries?
+	
+	protected Path(String name, int key) {
+		this.name = name;
+		this.key = key;
+		this.contents = new Vector<Path>();
+	}
+	
+	/**
+	 * Accessors
+	 */
+	protected int getKey() {
+		return key;
+	}
+	
+	
+	protected void addSubPath(String subPathName, int key) {
+		if ( !lookup.containsKey(subPathName) ) {
+			contents.add( new Path(subPathName, key) );
+			lookup.put( subPathName, contents.size()-1 );
+		}
+	}
+	
+	protected Path getSubPath(String subPathName) {
+		assert( lookup.containsKey(subPathName) );
+		return contents.get( lookup.get(subPathName) );
+	}
+}
 
 
 

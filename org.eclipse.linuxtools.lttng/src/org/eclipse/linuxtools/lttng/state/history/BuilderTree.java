@@ -6,77 +6,135 @@ package org.eclipse.linuxtools.lttng.state.history;
 
 import java.util.Vector;
 
-import org.eclipse.linuxtools.tmf.event.TmfTimestamp;
-
 /**
- * This is the BuilderTree, which is basically a CurrentStateTree, except it also
- * records the "start time" of every state stored in currentStateInfo.
- * It is used when building a State History Tree (hence its name), since we can
- * then easily create Intervals to be inserted in the SHTree.
+ * This is the BuilderTree, which mainly contains a "state info" vector similar
+ * to the one in the Current State Tree, except here we also record the
+ * start time of every state stored in it.
+ * 
+ * We can then build StateHistoryIntervals to be inserted in the State History Tree,
+ * when we detect state changes : the "start time" of the interval will be the recorded time
+ * we have here, and the "end time" will be the timestamp of the new state-changing even we
+ * just read.
  * 
  * @author alexmont
  *
  */
-class BuilderTree extends CurrentStateTree {
+class BuilderTree {
 	
-	private Vector<TimeValue> currentStateStartTimes;
+	private boolean isActive;
+	
+	/* Reference to which SHT this builder tree, well, builds */
+	private StateHistoryTree stateHistTree;
+	
+	private Vector<StateValue> ongoingStateInfo;
+	private Vector<TimeValue> ongoingStateStartTimes;
 	
 	
-	public BuilderTree() {
-		super();
-		currentStateStartTimes = new Vector<TimeValue>();
+	protected BuilderTree(StateHistoryTree SHTree) {
+		this.isActive = true;
+		this.stateHistTree = SHTree;
+		this.ongoingStateInfo = new Vector<StateValue>();
+		this.ongoingStateStartTimes = new Vector<TimeValue>();
+	
 	}
 	
-	/**
-	 * These methods will be called by TMF, when we hit an
-	 * event causing a state change that we want to record.
-	 */
-	public void addEvent(String path, int valueAsInt, TmfTimestamp eventTime) {
-		StateValue value = new StateValue(valueAsInt);
-		addEvent(path, value, (TimeValue) eventTime);
-	}
-	
-	public void addEvent(String path, String valueAsString, TmfTimestamp eventTime) {
-		StateValue value = new StateValue(valueAsString);
-		addEvent(path, value, (TimeValue) eventTime);
-	}
 
  	/**
-	 * This is the lower-level method that will be called by the wrappers above.
+	 * This is the lower-level method that will be called by the StateHistoryInterface
+	 * (with already-built StateValues and TimeValues)
 	 * 
-	 * @param path : The "path" in the system-state tree used in the TMF state system (ex.: "System/Processes/PID1001/execMode")
-	 * @param value : The value of the this path (ex.: "syscall")
+	 * @param index : The index in the vectors (which is the integer representation of the path in the CST)
+	 * @param value : The StateValue associated to this path in the table (ex.: "syscall" or a numerical value)
 	 * @param eventTime : The timestamp associated with this state change
 	 */
-	private void addEvent(String path, StateValue value, TimeValue eventTime) {
+	protected void processStateChange(int index, StateValue value, TimeValue eventTime) {
+		StateHistoryTreeInterval newInterval;
 		
-		if ( conversionTable.containsKey(path) ) {
-			/* 
-			 * The given element already exist in the current state, that means it's being replaced.
-			 * We will create a new SHTInterval object with the values we now have, and insert it in the SHTree.
+		if ( index > ongoingStateInfo.size() ) {
+			/* We are in the presence of a new "state info" this tree hasn't seen so far,
+			 * so we need to add a new element to the 2 vectors.
 			 */
-			int index = conversionTable.get(path);
-			StateValue oldValue = currentStateInfo.get(index);
-			TimeValue oldEventStartTime = currentStateStartTimes.get(index);
-			StateHistoryTreeInterval newInterval = new StateHistoryTreeInterval(oldEventStartTime, eventTime, index, oldValue);
+			assert( index == ongoingStateInfo.size() + 1 );	/* If not, this would mean we have missed a previous even the CST has read, which would be bad */
+			assert( index == ongoingStateStartTimes.size() + 1);
+			
+			ongoingStateInfo.add(value);
+			ongoingStateStartTimes.add(eventTime);
+			
+		} else {
+			/* We are reading an entry we already have in the tree, which means we're modifying it.
+			 * We need to generate a SHTInterval from that information and insert it in the History tree.
+			 */
+
+			newInterval = new StateHistoryTreeInterval(
+									ongoingStateStartTimes.get(index),		/* Start Time */
+									eventTime,								/* End Time */
+									index,									/* "key" */
+									ongoingStateInfo.get(index) );			/* StateValue */
 			
 			stateHistTree.insertInterval(newInterval);
 			
-			/* Replace the spot in the Current State Tree with the new information from the event */
-			currentStateInfo.set(index, value);
-			currentStateStartTimes.set(index, eventTime);
-			
-		} else {
-			/* We are simply adding a new element that wasn't there before */
-			currentStateInfo.add(value);
-			currentStateStartTimes.add(eventTime);
-			conversionTable.put(path, currentStateInfo.size());
+			/* Replace this spot in the Builder Tree with the new information from the event */
+			ongoingStateInfo.set(index, value);
+			ongoingStateStartTimes.set(index, eventTime);
 		}
+		
 	}
 	
-	@Override
-	public void getStateAtTime(TimeValue t) {
-		/* No, no, no, this should only be called from a CST, not a builder tree! */
-		assert( false );
+	/**
+	 * Run a "get state at time" query on the Builder Tree
+	 * If someday we get to multi-thread the state system, we need to make sure to
+	 * do some correct locking here (we don't want the Builder Tree to get modified while we're
+	 * querying it)
+	 * 
+	 * @param stateInfo The stateInfo object in which we will put our relevant information
+	 * @param t The requested timestamp
+	 */
+	protected void doQuery(Vector<StateValue> stateInfo, TimeValue t) {
+		
+		assert( this.isActive );
+		assert( stateInfo.size() == ongoingStateInfo.size() );
+		
+		for ( int i=0; i < ongoingStateInfo.size(); i++ ) {
+			/* If the information about 'i' at time 't' is in this tree, return it */
+			if ( t.compareTo(ongoingStateStartTimes.get(i), false) >= 0 ) {
+				stateInfo.set(i, ongoingStateInfo.get(i) );
+			}
+		}
+		
 	}
+	
+	/**
+	 * Close off the Builder Tree, used for example when we are done reading a static trace file
+	 * All the information currently contained in it will be converted to intervals and inserted
+	 * in the State History.
+	 * 
+	 * @param t Timestamp to apply as the End Time of all intervals we'll create.
+	 */
+	protected void closeBuilderTree(TimeValue t) {
+		StateHistoryTreeInterval newInterval;
+		
+		for ( int i=0; i < ongoingStateInfo.size(); i++ ) {
+			
+			newInterval = new StateHistoryTreeInterval(
+					ongoingStateStartTimes.get(i),		/* Start Time */
+					t,									/* End Time */
+					i,									/* "key" */
+					ongoingStateInfo.get(i) );			/* StateValue */
+			
+			stateHistTree.insertInterval(newInterval);
+		}
+		
+		ongoingStateInfo.clear();
+		ongoingStateStartTimes.clear();
+		this.isActive = false;
+	}
+	
+	/**
+	 * Simply returns if this Builder Tree is currently being used or not
+	 * @return
+	 */
+	protected boolean isActive() {
+		return this.isActive;
+	}
+	
 }

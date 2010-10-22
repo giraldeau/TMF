@@ -10,8 +10,10 @@ import org.eclipse.linuxtools.tmf.event.TmfTimestamp;
 
 /**
  * This is the highest-level container of the whole State History system.
- * It keeps track of all the SH Trees and Builder trees and whatnot.
- * It also provides the external public API.
+ * It keeps track of all the Current State Trees used in the experiment.
+ * (each CST then contains its related Builder Tree and History Tree)
+ * 
+ * This class also provides the external public API.
  * 
  * @author alexmont
  *
