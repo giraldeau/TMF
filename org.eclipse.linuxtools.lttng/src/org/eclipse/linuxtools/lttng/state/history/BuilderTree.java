@@ -81,10 +81,11 @@ class BuilderTree {
 	}
 	
 	/**
-	 * Run a "get state at time" query on the Builder Tree
+	 * Run a "get state at time" query on the Builder Tree.
+	 * 
 	 * If someday we get to multi-thread the state system, we need to make sure to
 	 * do some correct locking here (we don't want the Builder Tree to get modified while we're
-	 * querying it)
+	 * querying it!)
 	 * 
 	 * @param stateInfo The stateInfo object in which we will put our relevant information
 	 * @param t The requested timestamp

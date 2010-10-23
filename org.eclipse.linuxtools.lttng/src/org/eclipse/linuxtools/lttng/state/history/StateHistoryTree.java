@@ -140,7 +140,7 @@ class StateHistoryTree {
 	 * Insertion methods, for when we want to insert intervals into the tree
 	 */
 	public void insertInterval(StateHistoryTreeInterval interval) {
-		//TODO, eventually, try other insertion methods (at root node, etc.)
+		//TODO try other insertion methods? (at root node, etc.)
 		tryInsertAtNode(interval, this.latestLeaf);
 	}
 	
@@ -185,10 +185,6 @@ class StateHistoryTree {
 			 */
 			assert( targetNode.getParentSequenceNumber() != -1 );		/* This would mean we're trying to insert something
 																		   that starts *before* the root node. */
-//			nextNode = treeIO.readNode( targetNode.getParentSequenceNumber() );
-//			assert( nextNode.getSequenceNumber() != nodeSeqNumber );
-//			assert( nextNode != null );
-//			return tryInsertAtNode(interval, nextNode.getSequenceNumber());
 			return tryInsertAtNode( interval, targetNode.getParentSequenceNumber() );
 		}
 		

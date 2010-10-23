@@ -52,13 +52,6 @@ public class CurrentStateTree {
 	
 	
 	/**
-	 * Default constructor, with pre-defined configuration values
-	 */
-	public CurrentStateTree(String newTreeFileName) {
-		this(newTreeFileName, new TimeValue(0), 64*1024, 10, 100);
-	}
-	
-	/**
 	 * Constructor for when we're building a new tree from scratch
 	 * 
 	 * @param newTreeFileName The "name" of the tree, which will be the filename on disk
@@ -129,27 +122,27 @@ public class CurrentStateTree {
 	 * @return The integer representation of the (complete) String in the quark table
 	 */
 	private int processPath(String pathAsString) {
-		Path currentPath = root;
+		Path currentPath = this.root;
 		String currentString;
 		String[] components = pathAsString.split("/");
 		
 		for ( int i=0; i < components.length; i++) {
 			/* Generate the partial String we are now processing */
-			currentString = "";
-			for ( int j=0; j <= i; j++ ) {
+			currentString = components[0];
+			for ( int j=1; j <= i; j++ ) {
 				currentString += "/" + components[j];
 			}
 			
 			if ( !conversionTable.containsKey(currentString) ) {
 				/* We need to add this partial path to the tables */
 				currentStateInfo.add(null);		/* just to increment the size */
-				conversionTable.put(currentString, currentStateInfo.size() );
+				conversionTable.put(currentString, currentStateInfo.size()-1 );
 				reverseConversionTable.add(currentString);
-				currentPath.addSubPath(components[i], currentStateInfo.size() );
+				currentPath.addSubPath(components[i], currentStateInfo.size()-1 );
 			}
 			currentPath = currentPath.getSubPath(components[i]);
 		}
-		return currentStateInfo.size();
+		return currentStateInfo.size()-1;
 	}
 	
 	/**
@@ -158,9 +151,9 @@ public class CurrentStateTree {
 	 * If the Builder Tree is active, we will also query it for information which might not yet be in
 	 * SHT (which is the case when doing live trace reading).
 	 * 
-	 * @param t Target Time
+	 * @param t Target time
 	 */
-	public void getStateAtTime(TimeValue t) {
+	public void setStateAtTime(TimeValue t) {
 		stateHistTree.doQuery(currentStateInfo, t);
 		
 		if ( builderTree.isActive() ) {
@@ -203,6 +196,10 @@ class Path {
 	/**
 	 * Accessors
 	 */
+	protected String getName() {
+		return name;
+	}
+	
 	protected int getKey() {
 		return key;
 	}
