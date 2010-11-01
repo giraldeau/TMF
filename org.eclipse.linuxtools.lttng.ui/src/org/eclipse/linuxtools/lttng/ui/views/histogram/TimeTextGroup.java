@@ -226,6 +226,11 @@ public class TimeTextGroup implements FocusListener, KeyListener {
     	lblNanosec.setParent(newParent);
     }
     
+    
+    public boolean isDisposed() {
+        return grpName.isDisposed();
+    }
+    
     /**
      * Getter for the time value of the control.<p>
      * 
@@ -364,6 +369,7 @@ public class TimeTextGroup implements FocusListener, KeyListener {
 	 * 
 	 * @param event  The focus event generated.
 	 */
+	@Override
 	public void focusGained(FocusEvent event) {
 		// Nothing to do yet
 	}
@@ -374,6 +380,7 @@ public class TimeTextGroup implements FocusListener, KeyListener {
 	 * 
 	 * @param event  The focus event generated.
 	 */
+	@Override
 	public void focusLost(FocusEvent event) {
 		handleNewStringValue();
 	}
@@ -385,6 +392,7 @@ public class TimeTextGroup implements FocusListener, KeyListener {
 	 * 
 	 * @param event  The KeyEvent generated when the key was pressed.
 	 */
+	@Override
 	public void keyPressed(KeyEvent event) {
 		switch (event.keyCode) {
 			// SWT.CR is "ENTER" Key
@@ -403,6 +411,7 @@ public class TimeTextGroup implements FocusListener, KeyListener {
 	 * 
 	 * @param event  The KeyEvent generated when the key was pressed.
 	 */
+	@Override
 	public void keyReleased(KeyEvent e) {
 		
 	}
@@ -438,12 +447,13 @@ class AsyncTimeTextGroupRedrawer {
 	 */
 	public void asynchronousSetValue(final long newTime) {
 		// Ignore setting of value if widget is disposed
-		if (parentTimeTextGroup.getParent().isDisposed()) return;
+		if (parentTimeTextGroup.isDisposed()) return;
 		
 		Display display =  parentTimeTextGroup.getParent().getDisplay();
 		display.asyncExec(new Runnable() {
-			public void run() {
-				if (!parentTimeTextGroup.getParent().isDisposed()) {
+			@Override
+            public void run() {
+				if (!parentTimeTextGroup.isDisposed()) {
 					parentTimeTextGroup.setValue(newTime);
 				}
 			}
@@ -459,13 +469,14 @@ class AsyncTimeTextGroupRedrawer {
 	 */
 	public void asynchronousSetGroupName(String newGroupName) {
 		// Ignore setting of name if widget is disposed
-		if (parentTimeTextGroup.getParent().isDisposed()) return;
+		if (parentTimeTextGroup.isDisposed()) return;
 
 		final String tmpName = newGroupName;
 		Display display =  parentTimeTextGroup.getParent().getDisplay();
 		display.asyncExec(new Runnable() {
-			public void run() {
-				if (!parentTimeTextGroup.getParent().isDisposed()) {
+			@Override
+            public void run() {
+				if (!parentTimeTextGroup.isDisposed()) {
 					parentTimeTextGroup.setGroupName(tmpName);
 				}
 			}
@@ -480,12 +491,13 @@ class AsyncTimeTextGroupRedrawer {
 	 */
 	public void asynchronousRedraw() {
 		// Ignore redraw if widget is disposed
-		if (parentTimeTextGroup.getParent().isDisposed()) return;
+		if (parentTimeTextGroup.isDisposed()) return;
 
 		Display display =  parentTimeTextGroup.getParent().getDisplay();
 		display.asyncExec(new Runnable() {
-			public void run() {
-				if (!parentTimeTextGroup.getParent().isDisposed()) {
+			@Override
+            public void run() {
+				if (!parentTimeTextGroup.isDisposed()) {
 					parentTimeTextGroup.getParent().redraw();
 				}
 			}

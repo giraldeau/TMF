@@ -38,37 +38,63 @@ public class LttngSyntEventRequest extends TmfEventRequest<LttngSyntheticEvent>
 	private TmfTimeRange fExperimentTimeRange = null;
 	private Object fsource = null;
 	private final ITransEventProcessor fprocessor;
+	private String fExperimentName = null; 
+	
 
 	// ========================================================================
 	// Constructors
 	// =======================================================================
+    /**
+     * @param range
+     * @param offset
+     * @param nbEvents
+     * @param maxBlockSize
+     * @param listener
+     * @param experimentTimeRange
+     * @param processor
+     */
+    public LttngSyntEventRequest(TmfTimeRange range, long offset, int nbEvents,
+	            int maxBlockSize, IRequestStatusListener listener,
+	            TmfTimeRange experimentTimeRange, ITransEventProcessor processor) {
+	        
+	        this(range, offset, nbEvents, maxBlockSize, listener, experimentTimeRange, processor, "", ExecutionType.FOREGROUND);
+	    }
 	/**
 	 * @param range
 	 * @param offset
 	 * @param nbEvents
 	 * @param maxBlockSize
 	 * @param listener
+	 * @param experimentTimeRange
+	 * @param processor
+	 * @param experimentName 
 	 */
 	public LttngSyntEventRequest(TmfTimeRange range, long offset, int nbEvents,
 			int maxBlockSize, IRequestStatusListener listener,
-			TmfTimeRange experimentTimeRange, ITransEventProcessor processor) {
+			TmfTimeRange experimentTimeRange, ITransEventProcessor processor, String experimentName) {
 		
-		this(range, offset, nbEvents, maxBlockSize, listener, experimentTimeRange, processor, ExecutionType.FOREGROUND);
+		this(range, offset, nbEvents, maxBlockSize, listener, experimentTimeRange, processor, experimentName, ExecutionType.FOREGROUND);
 	}
 
-	/**
-	 * @param range
-	 * @param offset
-	 * @param nbEvents
-	 * @param maxBlockSize
-	 * @param listener
-	 */
+    /**
+     * @param range
+     * @param offset
+     * @param nbEvents
+     * @param maxBlockSize
+     * @param listener
+     * @param experimentTimeRange
+     * @param processor
+     * @param experimentName
+     * @param execType 
+     */
 	public LttngSyntEventRequest(TmfTimeRange range, long offset, int nbEvents,
 			int maxBlockSize, IRequestStatusListener listener,
-			TmfTimeRange experimentTimeRange, ITransEventProcessor processor, ExecutionType execType) {
+			TmfTimeRange experimentTimeRange, ITransEventProcessor processor, String experimentName,
+			ExecutionType execType) {
 		
 		super(LttngSyntheticEvent.class, range, nbEvents, maxBlockSize, execType);
 		fExperimentTimeRange = experimentTimeRange;
+		fExperimentName = new String(experimentName);
 		addListener(listener);
 
 		fprocessor = processor;
@@ -86,7 +112,7 @@ public class LttngSyntEventRequest extends TmfEventRequest<LttngSyntheticEvent>
 	/**
 	 * @param listener
 	 */
-	public void removeListner(IRequestStatusListener listener) {
+	public void removeListener(IRequestStatusListener listener) {
 		if (listener != null) {
 			listeners.remove(listener);
 		}
@@ -98,6 +124,7 @@ public class LttngSyntEventRequest extends TmfEventRequest<LttngSyntheticEvent>
 	/* (non-Javadoc)
 	 * @see org.eclipse.linuxtools.lttng.request.ILttngEventRequest#startRequestInd(org.eclipse.linuxtools.tmf.experiment.TmfExperiment, boolean)
 	 */
+	@Override
 	public void startRequestInd(TmfEventProvider<LttngSyntheticEvent> provider) {
 		// trigger the start to process this request
 		provider.sendRequest(this);
@@ -106,6 +133,7 @@ public class LttngSyntEventRequest extends TmfEventRequest<LttngSyntheticEvent>
 	/* (non-Javadoc)
 	 * @see org.eclipse.linuxtools.lttng.request.ILttngEventRequest#notifyCompletion()
 	 */
+	@Override
 	public void notifyCompletion() {
 		// Notify specific state views
 		for (IRequestStatusListener listener : listeners) {
@@ -116,6 +144,7 @@ public class LttngSyntEventRequest extends TmfEventRequest<LttngSyntheticEvent>
 	/* (non-Javadoc)
 	 * @see org.eclipse.linuxtools.lttng.request.ILttngEventRequest#notifyStarting()
 	 */
+	@Override
 	public void notifyStarting() {
 		for (IRequestStatusListener listener : listeners) {
 			listener.processingStarted(new RequestStartedSignal(this));
@@ -125,6 +154,7 @@ public class LttngSyntEventRequest extends TmfEventRequest<LttngSyntheticEvent>
 	/* (non-Javadoc)
 	 * @see org.eclipse.linuxtools.lttng.request.ILttngEventRequest#getExperimentTimeRange()
 	 */
+	@Override
 	public TmfTimeRange getExperimentTimeRange() {
 		return fExperimentTimeRange;
 	}
@@ -136,6 +166,7 @@ public class LttngSyntEventRequest extends TmfEventRequest<LttngSyntheticEvent>
 	 * org.eclipse.linuxtools.lttng.request.ILttngSyntEventRequest#setSynEventCount
 	 * (java.lang.Long)
 	 */
+	@Override
 	public synchronized void setSynEventCount(Long numOfEvents) {
 		this.feventCount = numOfEvents;
 	}
@@ -147,6 +178,7 @@ public class LttngSyntEventRequest extends TmfEventRequest<LttngSyntheticEvent>
 	 * org.eclipse.linuxtools.lttng.request.ILttngSyntEventRequest#getEventCount
 	 * ()
 	 */
+	@Override
 	public synchronized Long getSynEventCount() {
 		return feventCount;
 	}
@@ -154,6 +186,7 @@ public class LttngSyntEventRequest extends TmfEventRequest<LttngSyntheticEvent>
 	/* (non-Javadoc)
 	 * @see org.eclipse.linuxtools.lttng.request.ILttngEventRequest#setclearDataInd(boolean)
 	 */
+	@Override
 	public void setclearDataInd(boolean clearAllData) {
 		this.clearDataInd = clearAllData;
 	}
@@ -161,6 +194,7 @@ public class LttngSyntEventRequest extends TmfEventRequest<LttngSyntheticEvent>
 	/* (non-Javadoc)
 	 * @see org.eclipse.linuxtools.lttng.request.ILttngEventRequest#isclearDataInd()
 	 */
+	@Override
 	public boolean isclearDataInd() {
 		return clearDataInd;
 	}
@@ -189,6 +223,7 @@ public class LttngSyntEventRequest extends TmfEventRequest<LttngSyntheticEvent>
 	/**
 	 * @return the source
 	 */
+	@Override
 	public Object getSource() {
 		return fsource;
 	}
@@ -196,6 +231,7 @@ public class LttngSyntEventRequest extends TmfEventRequest<LttngSyntheticEvent>
 	/**
 	 * @param source
 	 */
+	@Override
 	public void setSource(Object source) {
 		this.fsource = source;
 	}
@@ -206,4 +242,10 @@ public class LttngSyntEventRequest extends TmfEventRequest<LttngSyntheticEvent>
 	public ITransEventProcessor getProcessor() {
 		return fprocessor;
 	}
+
+	@Override
+    public String getExperimentName() {
+	    return fExperimentName;
+	}
+	
 }

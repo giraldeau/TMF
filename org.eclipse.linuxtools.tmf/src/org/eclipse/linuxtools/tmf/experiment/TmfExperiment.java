@@ -138,6 +138,7 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
     	fTimeRange = other.fTimeRange;
     }
     
+	@Override
 	public TmfExperiment<T> createTraceCopy() {
 		TmfExperiment<T> experiment = new TmfExperiment<T>(this);
 		TmfSignalManager.deregister(experiment);
@@ -165,26 +166,32 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
     // ITmfTrace
     // ------------------------------------------------------------------------
 
+	@Override
 	public String getPath() {
 		return null;
 	}
 
+	@Override
 	public long getNbEvents() {
 		return fNbEvents;
 	}
 
-    public int getCacheSize() {
+    @Override
+	public int getCacheSize() {
         return fIndexPageSize;
     }
 
+	@Override
 	public TmfTimeRange getTimeRange() {
 		return fTimeRange;
 	}
 
+	@Override
 	public TmfTimestamp getStartTime() {
 		return fTimeRange.getStartTime();
 	}
 
+	@Override
 	public TmfTimestamp getEndTime() {
 		return fTimeRange.getEndTime();
 	}
@@ -197,7 +204,7 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
     // Accessors
     // ------------------------------------------------------------------------
 
-    private static void setCurrentExperiment(TmfExperiment<?> experiment) {
+    public static void setCurrentExperiment(TmfExperiment<?> experiment) {
     	fCurrentExperiment = experiment;
     }
 
@@ -220,7 +227,8 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
      * @param timestamp
      * @return
      */
-    public long getRank(TmfTimestamp timestamp) {
+    @Override
+	public long getRank(TmfTimestamp timestamp) {
     	TmfExperimentContext context = seekEvent(timestamp);
     	return context.getRank();
     }
@@ -301,6 +309,7 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
 
 	// Returns a brand new context based on the location provided
 	// and initializes the event queues
+	@Override
 	public synchronized TmfExperimentContext seekLocation(ITmfLocation<?> location) {
 
 		// Validate the location
@@ -348,6 +357,7 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
 	/* (non-Javadoc)
 	 * @see org.eclipse.linuxtools.tmf.trace.ITmfTrace#seekEvent(org.eclipse.linuxtools.tmf.event.TmfTimestamp)
 	 */
+	@Override
 	public synchronized TmfExperimentContext seekEvent(TmfTimestamp timestamp) {
 
 //		Tracer.trace("Ctx: seekEvent(TS) - start");
@@ -401,6 +411,7 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
 	/* (non-Javadoc)
 	 * @see org.eclipse.linuxtools.tmf.trace.ITmfTrace#seekEvent(long)
 	 */
+	@Override
 	public synchronized TmfExperimentContext seekEvent(long rank) {
 
 //		Tracer.trace("Ctx: seekEvent(rank) - start");
@@ -464,6 +475,7 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
 //		Tracer.trace(result.toString());
 //	}
 	
+	@Override
 	public synchronized TmfEvent getNextEvent(TmfContext context) {
 
 		// Validate the context
@@ -509,7 +521,8 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
 
 	        TmfContext traceContext = expContext.getContexts()[trace];
 	        TmfExperimentLocation expLocation = (TmfExperimentLocation) expContext.getLocation();
-	        expLocation.getLocation()[trace] = traceContext.getLocation().clone();
+//	        expLocation.getLocation()[trace] = traceContext.getLocation().clone();
+	        expLocation.getLocation()[trace] = traceContext.getLocation();
 
 //	        updateIndex(expContext, timestamp);
 
@@ -546,6 +559,7 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
 	/* (non-Javadoc)
 	 * @see org.eclipse.linuxtools.tmf.trace.ITmfTrace#parseEvent(org.eclipse.linuxtools.tmf.trace.TmfContext)
 	 */
+	@Override
 	public TmfEvent parseEvent(TmfContext context) {
 		
 		// Validate the context
@@ -781,10 +795,15 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
 						public void handleCompleted() {
 //							System.out.println("Request completed at: " + timestamp[0]);
 							if (getNbRead() < CHUNK_SIZE[0]) {
-								eventRequest.done();
+							    if (isCancelled()) { 
+							        eventRequest.cancel();
+							    }
+							    else {
+							        eventRequest.done();
+							    }
 								isFinished[0] = Boolean.TRUE;
 								nbRead[0] += getNbRead();
-//								System.out.println("fNbRead=" + fNbRead + ", count=" + count +", total=" + nbRead[0]);
+//								System.out.println("fNbRead=" + getNbRead() + " total=" + nbRead[0]);
 							}
 							super.handleCompleted();
 						}

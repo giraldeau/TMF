@@ -24,7 +24,7 @@ import org.eclipse.swt.widgets.Composite;
 public abstract class HistogramConstant {
 	// Constants relative to requests
 	public final static int MAX_EVENTS_PER_READ = 1;
-	public final static int REDRAW_EVERY_NB_EVENTS = 10000;
+	public final static int REDRAW_EVERY_NB_EVENTS = 20000;
 	public final static Boolean SKIP_EMPTY_INTERVALS_WHEN_CALCULATING_AVERAGE = true;
 	
 	
@@ -55,14 +55,12 @@ public abstract class HistogramConstant {
 	// Constants relative to the drawing of the Histogram
 	// Colors for the histogram. Background should be the same as the background in use
 	public final static int EMPTY_BACKGROUND_COLOR = SWT.COLOR_WHITE;
-	public final static int HISTOGRAM_BARS_COLOR = SWT.COLOR_DARK_CYAN;
 	public final static int SELECTED_EVENT_COLOR = SWT.COLOR_RED;
-	public final static int SELECTION_WINDOW_COLOR = SWT.COLOR_RED;
 	
 	// Dimension for the line of the "Selection Window"
 	public final static int MINIMUM_WINDOW_WIDTH = 3;
-	public final static int SELECTION_LINE_WIDTH = 2;
-	public final static int SELECTION_CROSSHAIR_LENGTH = 6;
+	public final static int SELECTION_LINE_WIDTH = 1;
+	public final static int SELECTION_CROSSHAIR_WIDTH = 1;
 	
 	
 	/**
