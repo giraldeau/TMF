@@ -1,3 +1,27 @@
+2010-10-29  Francois Chouinard  <fchouinard@gmail.com>
+
+	* src/org/eclipse/linuxtools/lttng/ui/views/histogram/ParentHistogramCanvasPaintListener.java (paintControl): Temporary refresh fix
+
+2010-10-27  Francois Chouinard  <fchouinard@gmail.com>
+
+	* Implement enhanced request coalescing across providers, request cancellation, multiple synth data providers and cleanup
+		* src/org/eclipse/linuxtools/lttng/ui/model/trange/TimeRangeResourceFactory.java: 
+		* src/org/eclipse/linuxtools/lttng/ui/views/common/AbsTimeUpdateView.java: 
+		* src/org/eclipse/linuxtools/lttng/ui/views/controlflow/ControlFlowView.java: 
+		* src/org/eclipse/linuxtools/lttng/ui/views/histogram/HistogramConstant.java: 
+		* src/org/eclipse/linuxtools/lttng/ui/views/histogram/HistogramView.java: 
+		* src/org/eclipse/linuxtools/lttng/ui/views/histogram/TimeTextGroup.java: 
+		* src/org/eclipse/linuxtools/lttng/ui/views/project/ProjectView.java: 
+		* src/org/eclipse/linuxtools/lttng/ui/views/resources/ResourcesView.java: 
+		* src/org/eclipse/linuxtools/lttng/ui/views/statistics/StatisticsView.java: 
+
+2010-10-26  Francois Chouinard  <fchouinard@gmail.com>
+
+	* src/org/eclipse/linuxtools/lttng/ui/views/histogram/HistogramCanvas.java: Double-buffering
+	* src/org/eclipse/linuxtools/lttng/ui/views/histogram/HistogramCanvasPaintListener.java: Double-buffering 
+	* src/org/eclipse/linuxtools/lttng/ui/views/histogram/HistogramConstant.java: Fixed a few constants for the selected window display
+	* src/org/eclipse/linuxtools/lttng/ui/views/histogram/ParentHistogramCanvasPaintListener.java: Double-buffering
+
 2010-10-15  Francois Chouinard  <fchouinard@gmail.com>
 
 	* src/org/eclipse/linuxtools/lttng/ui/views/histogram/HistogramCanvas.java (asynchronousNotifyParentUpdatedInformation): Fixed typo
