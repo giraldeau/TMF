@@ -67,20 +67,22 @@ public class StateHistoryInterface {
 	 * 
 	 * @param treeIndex To which tree (in the treeList) we want to add this event. It was returned at the tree creation.
 	 * @param pathName The 'path' to which we want to add the record (ex.: "hostname/processes/PID2001/execMode")
-	 * @param value The value this entry needs to have (either String or int, ex.: "syscall" or '1234')
+	 * @param valueInt (or valueStr) The value this entry needs to have (either String or int, ex.: "syscall" or '1234')
 	 * @param t The timestamp associated with this state change
 	 */
+	public void addStateChange(int treeIndex, String pathName, int valueInt, LttngTimestamp t) {
+		StateValue sv = new StateValue(valueInt);
+		addStateChange(treeIndex, pathName, sv, (TimeValue) t);
+		return;
+	}
+	
 	public void addStateChange(int treeIndex, String pathName, String valueStr, LttngTimestamp t) {
 		StateValue sv = new StateValue(valueStr);
 		addStateChange(treeIndex, pathName, sv, (TimeValue) t);
 		return;
 	}
 	
-	public void addStateChange(int treeIndex, String pathName, int valueInt, LttngTimestamp t) {
-		StateValue sv = new StateValue(valueInt);
-		addStateChange(treeIndex, pathName, sv, (TimeValue) t);
-		return;
-	}
+	
 	
 	/**
 	 * Internal event-recording method, which will add a given state change to the

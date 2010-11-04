@@ -79,7 +79,7 @@ class StateHistoryTree {
 		 */
 		//FIXME test to make sure the file already exists
 		RandomAccessFile desc = new RandomAccessFile(existingFileName, "rw");
-		assert (desc.readInt() == 2114);	/* = magic number, to make sure we're opening the right type of file */
+		assert (desc.readInt() == 4112);	/* = magic number, to make sure we're opening the right type of file */
 		
 		this.BLOCKSIZE = desc.readInt();
 		this.MAX_NB_CHILDREN = desc.readInt();
