@@ -5,7 +5,6 @@
 package org.eclipse.linuxtools.lttng.state.history;
 
 import java.util.LinkedList;
-
 import org.eclipse.linuxtools.lttng.event.LttngTimestamp;
 
 /**
@@ -105,4 +104,9 @@ public class StateHistoryInterface {
 	 * Query methods...
 	 */
 	
+	/* Example method, for now, that will set the CurrentStateTree's stateInfo vector to the
+	 * corresponding State at the requested time. */
+	public void readStateAtTime(int treeIndex, LttngTimestamp t) {
+		treeList.get(treeIndex).setStateAtTime( (TimeValue) t );
+	}
 }

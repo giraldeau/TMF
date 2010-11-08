@@ -33,15 +33,14 @@ import java.util.Vector;
  * @author alexmont
  *
  */
-public class CurrentStateTree {
+class CurrentStateTree {
 	
 	/* References to the underneath State History and Builder trees */
 	private StateHistoryTree stateHistTree;
 	private BuilderTree builderTree;
 	
-	/* The next two constructs implement the "quark table" to convert to and from the dash-separated paths */
-	private Hashtable<String, Integer> conversionTable;
-	private Vector<String> reverseConversionTable;
+	/* The quark table, that allows to convert path-strings into integers (that will be used in the SHT) */
+	private QuarkTable indexTable;
 	
 	/* The state info vector, which will contain the "system state" at one given requested time
 	 * currentStateInfo.size() = number of different entries we've seen so far */
@@ -60,12 +59,10 @@ public class CurrentStateTree {
 	 * @param maxChildren The max. number of children every node (other than the leafs) can have
 	 * @param cacheSize The size of the cache to use, in number of nodes (not a size in bytes!)
 	 */
-	public CurrentStateTree(String newTreeFileName, TimeValue treeStart,
+	protected CurrentStateTree(String newTreeFileName, TimeValue treeStart,
 							int blockSize, int maxChildren, int cacheSize) {
 		
-		//FIXME use some good starting values. get them from somewhere?
-		this.conversionTable = new Hashtable<String, Integer>();
-		this.reverseConversionTable = new Vector<String>();
+		this.indexTable = new QuarkTable();
 		this.currentStateInfo = new Vector<StateValue>();
 		
 		this.stateHistTree = new StateHistoryTree( newTreeFileName, treeStart, blockSize, maxChildren, cacheSize);
@@ -80,15 +77,15 @@ public class CurrentStateTree {
 	 * @param existingFileName
 	 * @param cacheSize Cache size to use, in number of nodes
 	 */
-	public CurrentStateTree(String existingFileName, int cacheSize) {
+	protected CurrentStateTree(String existingFileName, int cacheSize) {
 		//TODO NYI
 	}
 	
 	/**
 	 * Accessors
 	 */
-	public StateValue getStateValue(String path) {
-		return currentStateInfo.get( conversionTable.get(path) );
+	protected StateValue getStateValue(String path) {
+		return currentStateInfo.get( indexTable.getMatchingInt(path) );
 	}
 	
 	/**
@@ -97,19 +94,19 @@ public class CurrentStateTree {
 	 * and then pass it on to the Builder Tree.
 	 * 
 	 * @param pathAsString Dash-separated string we received from SHInterface
-	 * @param value The StateValue (the interface built for us) we need to associate to this entry
+	 * @param value The StateValue (the interface built for us) which we need to associate to this entry
 	 * @param eventTime The timestamp of this state-change
 	 */
 	protected void readStateChange(String pathAsString, StateValue value, TimeValue eventTime) {
 		
-		if ( conversionTable.containsKey(pathAsString)) {
+		if ( indexTable.containsEntry(pathAsString)) {
 			/* We have seen this entry name before, it should (hopefully) be in all the tables already.
 			 * We only need to pass it to the Builder Tree so it can do its thing with it. */
-			builderTree.processStateChange( conversionTable.get(pathAsString), value, eventTime );
+			builderTree.processStateChange( indexTable.getMatchingInt(pathAsString), value, eventTime );
 			
 		} else {
 			/* The request entry is not in the tables. So we add it to them, THEN pass it on to the builder tree. */
-			builderTree.processStateChange( processPath(pathAsString), value, eventTime );
+			builderTree.processStateChange( this.processPath(pathAsString), value, eventTime );
 		}
 		
 	}
@@ -133,12 +130,12 @@ public class CurrentStateTree {
 				currentString += "/" + components[j];
 			}
 			
-			if ( !conversionTable.containsKey(currentString) ) {
+			if ( !indexTable.containsEntry(currentString) ) {
 				/* We need to add this partial path to the tables */
+				currentPath.addSubPath(components[i], currentStateInfo.size() );
 				currentStateInfo.add(null);		/* just to increment the size */
-				conversionTable.put(currentString, currentStateInfo.size()-1 );
-				reverseConversionTable.add(currentString);
-				currentPath.addSubPath(components[i], currentStateInfo.size()-1 );
+				indexTable.addEntry(currentString);
+				
 			}
 			currentPath = currentPath.getSubPath(components[i]);
 		}
@@ -153,7 +150,7 @@ public class CurrentStateTree {
 	 * 
 	 * @param t Target time
 	 */
-	public void setStateAtTime(TimeValue t) {
+	protected void setStateAtTime(TimeValue t) {
 		stateHistTree.doQuery(currentStateInfo, t);
 		
 		if ( builderTree.isActive() ) {
@@ -175,22 +172,26 @@ class Path {
 	/* =~ directory/file name */
 	private String name;
 	
-	/* =~ file content. The key = the integer representation of the string representing this path */
+	/* =~ file content.
+	 * This key = the offset in the CurrentStateTree.stateInfo vector,
+	 * which is also the integer representation of the string, according to CurrentStateTree.indexTable */
 	private int key;
 	
 	/* The sub-directories of this directory, if any */
-	private Vector<Path> contents;
+	private Vector<Path> subDirs;
 	
 	/* The lookup table, to make looking up sub-directories faster
 	 * The String = the name of only the sub-directory (not the whole path).
-	 * The Integer = the index in this Path's contents vector */
+	 * The Integer = the offset in this.subDirs vector */
 	private Hashtable<String, Integer> lookup;
 	//FIXME is it worth having this used only when we start having a lot of entries?
+	
 	
 	protected Path(String name, int key) {
 		this.name = name;
 		this.key = key;
-		this.contents = new Vector<Path>();
+		this.subDirs = new Vector<Path>();
+		this.lookup = new Hashtable<String, Integer>();
 	}
 	
 	/**
@@ -206,15 +207,14 @@ class Path {
 	
 	
 	protected void addSubPath(String subPathName, int key) {
-		if ( !lookup.containsKey(subPathName) ) {
-			contents.add( new Path(subPathName, key) );
-			lookup.put( subPathName, contents.size()-1 );
-		}
+		assert ( !lookup.containsKey(subPathName) );
+		lookup.put( subPathName, subDirs.size() );
+		subDirs.add( new Path(subPathName, key) );
 	}
 	
 	protected Path getSubPath(String subPathName) {
 		assert( lookup.containsKey(subPathName) );
-		return contents.get( lookup.get(subPathName) );
+		return subDirs.get( lookup.get(subPathName) );
 	}
 }
 
