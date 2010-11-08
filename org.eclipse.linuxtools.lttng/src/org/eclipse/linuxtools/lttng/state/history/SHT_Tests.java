@@ -5,6 +5,7 @@
 package org.eclipse.linuxtools.lttng.state.history;
 
 import java.io.*;
+import org.eclipse.linuxtools.lttng.event.LttngTimestamp;
 
 /**
  * This is a series of tests for the SHT and CST trees
@@ -48,14 +49,14 @@ class SHT_Tests {
 	 * Insert intervals directly in a State History Tree
 	 * @param n : which intervals dataset to load
 	 */
+	@SuppressWarnings("unused")
 	private static void SHT_insertionTest(int n) {
 		String filePath = intervalsDataPath + "testin-" + n;
 		String line;
-		long testStartTime, testEndTime;
 		StateHistoryTree tree = new StateHistoryTree(treefilePath, new TimeValue(0), 64*1024, 10, 100);
 		
 		System.out.println("Beginning reading the test intervals file.");
-		testStartTime = System.nanoTime();
+		Timer.setStart();
 		
 		try {
 			FileInputStream fstream = new FileInputStream(filePath);
@@ -74,25 +75,51 @@ class SHT_Tests {
 			e.printStackTrace();
 		}
 		
-		testEndTime = System.nanoTime();
+		Timer.setEnd();
 		
 		System.out.println("Finished reading the intervals file.");
 		tree.printFullTreeHierarchy();
 		System.out.println( tree.toString() );
-		System.out.println( "Time taken: " + (testEndTime - testStartTime)/1000000000 + " sec  (" +
-							(testEndTime - testStartTime)/n + "nsec/interval)"
-						  );
+		Timer.printTimeTakenInSecs();
+		System.out.println( "(" + Timer.getTimeTakenInNanosecs() / n + "nsec/interval)");
 		
 	}
 	
+	@SuppressWarnings("unused")
+	private static void currentStateTest(String workingDir) {
+		StateHistoryInterface stateInterface = new StateHistoryInterface();
+		int a = stateInterface.createNewStateHistoryFile(workingDir + "testfile", new LttngTimestamp(0));
+		
+		TextdumpParser parse = new TextdumpParser(workingDir + "dump.txt", stateInterface, a);
+	}
 	
 	public static void main(String[] args) {
-		SHT_insertionTest(10000000);
+		//SHT_insertionTest(10000000);
+		currentStateTest("/home/alexandre/Desktop/tmp/");
 	}
 }
 
 
 
+abstract class Timer {
+	private static long timerStart, timerEnd;
+	
+	public static void setStart() {
+		timerStart = System.nanoTime();
+	}
+	
+	public static void setEnd() {
+		timerEnd = System.nanoTime();
+	}
+	
+	public static long getTimeTakenInNanosecs() {
+		return timerEnd - timerStart;
+	}
+	
+	public static void printTimeTakenInSecs() {
+		System.out.println( "Time taken: " + ( getTimeTakenInNanosecs() )/1000000000 + " sec.");
+	}
+}
 
 
 
