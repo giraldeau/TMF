@@ -111,14 +111,14 @@ class BuilderTree {
 	 * 
 	 * @param t Timestamp to apply as the End Time of all intervals we'll create.
 	 */
-	protected void closeBuilderTree(TimeValue t) {
+	protected void closeBuilderTree() {
 		StateHistoryTreeInterval newInterval;
 		
 		for ( int i=0; i < ongoingStateInfo.size(); i++ ) {
 			
 			newInterval = new StateHistoryTreeInterval(
 					ongoingStateStartTimes.get(i),		/* Start Time */
-					t,									/* End Time */
+					getLatestEndTime(),					/* End Time */
 					i,									/* "key" */
 					ongoingStateInfo.get(i) );			/* StateValue */
 			
@@ -128,6 +128,7 @@ class BuilderTree {
 		ongoingStateInfo.clear();
 		ongoingStateStartTimes.clear();
 		this.isActive = false;
+		return;
 	}
 	
 	/**
@@ -136,6 +137,17 @@ class BuilderTree {
 	 */
 	protected boolean isActive() {
 		return this.isActive;
+	}
+	
+	/**
+	 * Find the latest end time we current have in the Builder Tree
+	 * This is used, among others, so we can close the tree without depending on a
+	 * TimeValue passed on from higher-level methods (we should have this information anyway).
+	 * 
+	 * @return The TimeValue corresponding to the latest existing timestamp
+	 */
+	private TimeValue getLatestEndTime() {
+		//TODO
 	}
 	
 }

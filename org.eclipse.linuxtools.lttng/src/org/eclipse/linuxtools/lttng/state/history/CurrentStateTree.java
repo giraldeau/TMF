@@ -4,18 +4,19 @@
 
 package org.eclipse.linuxtools.lttng.state.history;
 
+import java.io.RandomAccessFile;
 import java.util.Hashtable;
 import java.util.Vector;
 
 /**
  * 
  * Here in TMF, the Strings will contain the "path" in the state system's /proc-like tree, for example:
- * "System/Processes/PID150/ExecMode"
- * "System/CPUs/CPU0/CurrentProcess"
+ * "System/Processes/PID150/exec_mode"
+ * "System/CPUs/CPU0/current_process"
  * 
  * ... and the char[] will contain the "values" that goes in this path, for example:
- * "RUNNING"
- * "(PID)2014"
+ * "running"
+ * "2014" (representing a PID)
  * 
  * Note that this char[] will stay the same throughout the whole StateHistory environnment, and
  * will be contained in the field 'char[] value' of the SHT-Intervals
@@ -158,6 +159,21 @@ class CurrentStateTree {
 		}
 	}
 	
+	/**
+	 * Method to close off the SHT and Builder trees.
+	 * This happens for example when we are done reading an offline trace.
+	 * We want to :
+	 * 1) close the Builder Tree, commit it to the SHT, mark it as inactive
+	 * 2) Have the cache in the SHT be written to disk.
+	 * 3) Write the Quark Table at the end of the file, so we can reopen it later.
+	 */
+	protected void closeTree() {
+		RandomAccessFile descriptor;
+		
+		builderTree.closeBuilderTree();			/* 1) */
+		descriptor = stateHistTree.closeTree();	/* 2) */
+		indexTable.writeSelf(descriptor);		/* 3) */
+	}
 }
 
 /**

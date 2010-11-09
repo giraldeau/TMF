@@ -15,15 +15,28 @@ import org.eclipse.linuxtools.lttng.event.LttngTimestamp;
  */
 class TimeValue extends LttngTimestamp {
 	
-	/**
+	/*
 	 * The three fields inherited from TmfTimestamp are:
 	 * long fValue;
 	 * byte fScale;
 	 * long fPrecision;
 	 */
     
+	/**
+	 * Standard constructor
+	 */
 	public TimeValue(long value) {
 		super(value);
+	}
+	
+	/**
+	 * Downgrading constructor, creates a TimeValue from an existing LttngTimestamp
+	 * @param t
+	 */
+	public TimeValue(LttngTimestamp t) {
+		this.fValue = t.getValue();
+		this.fScale = t.getScale();
+		this.fPrecision = t.getPrecision();
 	}
 	
 }

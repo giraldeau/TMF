@@ -48,6 +48,9 @@ class TextdumpParser {
 				;
 			}
 			
+			/* Tell the Interface we are now done reading the trace and want to save everything to disk */
+			stateInterface.closeTree(treeIndex);
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -74,9 +77,10 @@ class TextdumpParser {
 		}
 		
 		
-		/* Lines in the file are in the following format: */
-		//kernel.sched_schedule: 991.437156060 (/home/alexandre/bin/traces/trace1/kernel_1), 1659, 1659, compiz, , 1496, 0x0, SYSCALL { prev_pid = 0, next_pid = 1659, prev_state = 0 }
-		//channel.event type: timestamp (path/to/trace/channel_cpu#), pid, pid?, process name, blank?, number?, 0x0?, extra info?
+		/* Lines in the file are in the following format:
+		 * kernel.sched_schedule: 991.437156060 (/home/alexandre/bin/traces/trace1/kernel_1), 1659, 1659, compiz, , 1496, 0x0, SYSCALL { prev_pid = 0, next_pid = 1659, prev_state = 0 }
+		 * channel.event type: timestamp (path/to/trace/channel_cpu#), pid, pid?, process name, blank?, number?, 0x0?, extra info?
+		 */
 		
 		/* Get Event type */
 		components = line.split(": ");
@@ -145,8 +149,11 @@ class TextdumpParser {
 			break;
 		default:
 			prevState = "unknown";
+			break;
 		}
 		
+		//DEBUG
+		System.out.println("Process #" + new_pid + " now scheduled on CPU " + cpu);
 		
 		/* Update "what is being run on which CPU" */
 		stateInterface.addStateChange(treeIndex, "System/CPUs/" + cpu + "/Scheduled_process", new_pid, timestamp);

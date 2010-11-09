@@ -94,18 +94,18 @@ class StateHistoryTree {
 	}
 	
 	/**
-	 * "Destructor" method.
-	 * This method will cause the treeIO object to commit all nodes to disk, destroy itself,
-	 * and then return the RandomAccessFile descriptor so the Tree object can save its configuration
-	 * into the header of the file.
+	 * "Save" the tree to disk.
+	 * This method will cause the treeIO object to commit all nodes to disk
+	 * and then return the RandomAccessFile descriptor so the Tree object can
+	 * save its configuration into the header of the file.
 	 */
-	public void destroyTree() {
+	public RandomAccessFile closeTree() {
 		RandomAccessFile desc = treeIO.closeIO();
 		
 		/* Save the config of the tree to the header of the file */
 		try {
 			desc.seek(0);
-			desc.writeInt(2114);	/* Magic number for this file type */
+			desc.writeInt(4112);	/* Magic number for this file type */
 			
 			desc.writeInt(BLOCKSIZE);
 			desc.writeInt(MAX_NB_CHILDREN);
@@ -116,12 +116,16 @@ class StateHistoryTree {
 			desc.writeInt(rootNode);
 			desc.writeInt(latestLeaf);
 			
-			desc.close();
+			/* Seek to just after the Blocks section, where we will write the Quark Table information */
+			desc.seek( getTreeHeaderSize() + nodeCount * BLOCKSIZE );
+			
 			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			assert ( false );
 			e.printStackTrace();
 		}
+		
+		return desc;
 	}
 	
 	/**

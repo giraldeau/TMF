@@ -4,6 +4,7 @@
 
 package org.eclipse.linuxtools.lttng.state.history;
 
+import java.io.RandomAccessFile;
 import java.util.Hashtable;
 import java.util.Vector;
 
@@ -32,6 +33,17 @@ public class QuarkTable {
 		this.reverseConversionTable = new Vector<String>();
 	}
 	
+	/**
+	 * Reading constructor, with which we create a QuarkTable object by reading an
+	 * already-saved one in a file.
+	 * See the writeSelf method below.
+	 * 
+	 * @param desc The descriptor from which to read, which must be positionned at the start of a QuarkTable section
+	 */
+	public QuarkTable(RandomAccessFile desc) {
+		//TODO todo below also
+	}
+	
 	
 	public boolean containsEntry(String entry) {
 		return conversionTable.containsKey(entry);
@@ -56,5 +68,19 @@ public class QuarkTable {
 		conversionTable.put( entry, reverseConversionTable.size() );
 		reverseConversionTable.addElement(entry);
 		
+	}
+	
+	/**
+	 * Write the content of the reverseConversionTable vector in a file.
+	 * This method won't do any seeks, just dumb writes, so the descriptor
+	 * needs to be pre-seeked to where we want it.
+	 * 
+	 * The file section created in this way can then be re-read by the reading constructor
+	 * defined above, to re-create a Quark Table from a file contents.
+	 * 
+	 * @param desc The (pre-seeked) RandomAccessFile descriptor to which we will write
+	 */
+	public void writeSelf(RandomAccessFile desc) {
+		//TODO decide on the file format then doo eet!
 	}
 }

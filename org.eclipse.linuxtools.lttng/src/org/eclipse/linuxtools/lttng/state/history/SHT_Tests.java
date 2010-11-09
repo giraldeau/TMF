@@ -95,7 +95,7 @@ class SHT_Tests {
 	
 	public static void main(String[] args) {
 		//SHT_insertionTest(10000000);
-		currentStateTest("/home/alexandre/Desktop/tmp/");
+		currentStateTest("/home/alexandre/bin/traces/");
 	}
 }
 

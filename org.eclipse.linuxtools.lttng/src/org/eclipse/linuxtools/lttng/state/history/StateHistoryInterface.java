@@ -42,12 +42,12 @@ public class StateHistoryInterface {
 	 */
 	public int createNewStateHistoryFile(String fileName, LttngTimestamp treeStart,
 											int blockSize, int maxChildren, int cacheSize) {
-		treeList.add( new CurrentStateTree(fileName, (TimeValue) treeStart, blockSize, maxChildren, cacheSize) );
+		treeList.add( new CurrentStateTree(fileName, new TimeValue(treeStart), blockSize, maxChildren, cacheSize) );
 		return treeList.size()-1;
 	}
 	
 	public int createNewStateHistoryFile(String fileName, LttngTimestamp treeStart) {
-		treeList.add( new CurrentStateTree(fileName, (TimeValue) treeStart, 64*1024, 10, 100) );
+		treeList.add( new CurrentStateTree(fileName, new TimeValue(treeStart), 64*1024, 10, 100) );
 		return treeList.size()-1;
 	}
 	
@@ -71,13 +71,13 @@ public class StateHistoryInterface {
 	 */
 	public void addStateChange(int treeIndex, String pathName, int valueInt, LttngTimestamp t) {
 		StateValue sv = new StateValue(valueInt);
-		addStateChange(treeIndex, pathName, sv, (TimeValue) t);
+		addStateChange(treeIndex, pathName, sv, new TimeValue(t));
 		return;
 	}
 	
 	public void addStateChange(int treeIndex, String pathName, String valueStr, LttngTimestamp t) {
 		StateValue sv = new StateValue(valueStr);
-		addStateChange(treeIndex, pathName, sv, (TimeValue) t);
+		addStateChange(treeIndex, pathName, sv, new TimeValue(t));
 		return;
 	}
 	
@@ -99,6 +99,18 @@ public class StateHistoryInterface {
 		treeList.get(treeIndex).readStateChange(pathName, value, t);
 	}
 	
+	/**
+	 * This method indicates that we finished reading a trace file, and we should now
+	 * commit the contents of the StateHistoryTree and the CurrentStateTree to disk.
+	 * 
+	 * The tree will still be available for queries.
+	 * 
+	 * @param treeIndex Which tree in the treeList we want to close off
+	 * @param t The last timestamp we want to have in the record.
+	 */
+	public void closeTree(int treeIndex) {
+		treeList.get(treeIndex).closeTree();
+	}
 	
 	/**
 	 * Query methods...
@@ -107,6 +119,6 @@ public class StateHistoryInterface {
 	/* Example method, for now, that will set the CurrentStateTree's stateInfo vector to the
 	 * corresponding State at the requested time. */
 	public void readStateAtTime(int treeIndex, LttngTimestamp t) {
-		treeList.get(treeIndex).setStateAtTime( (TimeValue) t );
+		treeList.get(treeIndex).setStateAtTime( new TimeValue(t) );
 	}
 }
