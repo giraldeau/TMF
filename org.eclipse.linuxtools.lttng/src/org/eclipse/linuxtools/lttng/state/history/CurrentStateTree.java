@@ -4,6 +4,7 @@
 
 package org.eclipse.linuxtools.lttng.state.history;
 
+import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Vector;
 
@@ -77,8 +78,23 @@ class CurrentStateTree {
 	 * @param existingFileName
 	 * @param cacheSize Cache size to use, in number of nodes
 	 */
-	protected CurrentStateTree(String existingFileName, int cacheSize) {
-		//TODO NYI
+	protected CurrentStateTree(String existingFileName, int cacheSize) throws IOException {
+		/* Initialize the StateHistoryTree object, which will also rebuild the indexTable
+		 * by reading the information in the file on disk. */
+		this.stateHistTree = new StateHistoryTree(existingFileName, this.indexTable, cacheSize);
+		
+		/* Initialize the builderTree in inactive state */
+		this.builderTree = new BuilderTree(stateHistTree);
+		builderTree.closeBuilderTree();
+		
+		/* Initialize currentStateInfo at the required size */
+		this.currentStateInfo = new Vector<StateValue>( indexTable.getSize() );
+		
+		/* Rebuild the "filesystem" paths */
+		this.root = new Path("root", -1);
+		for ( int i = 0; i < indexTable.getSize(); i++ ) {
+			processPath( indexTable.getMatchingString(i) );
+		}
 	}
 	
 	/**
@@ -106,7 +122,7 @@ class CurrentStateTree {
 			
 		} else {
 			/* The request entry is not in the tables. So we add it to them, THEN pass it on to the builder tree. */
-			builderTree.processStateChange( this.processPath(pathAsString), value, eventTime );
+			builderTree.processStateChange( processPath(pathAsString), value, eventTime );
 		}
 		
 	}

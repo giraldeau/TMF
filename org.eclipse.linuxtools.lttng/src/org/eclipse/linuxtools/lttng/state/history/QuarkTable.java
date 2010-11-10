@@ -85,6 +85,13 @@ public class QuarkTable {
 		return reverseConversionTable.get(index);
 	}
 	
+	/**
+	 * Return the number of elements currently in the table
+	 */
+	public int getSize() {
+		return reverseConversionTable.size();
+	}
+	
 	
 	public void addEntry(String entry) {
 		assert ( !this.containsEntry(entry) );

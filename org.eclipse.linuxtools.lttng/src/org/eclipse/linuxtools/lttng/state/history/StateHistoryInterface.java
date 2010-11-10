@@ -4,7 +4,8 @@
 
 package org.eclipse.linuxtools.lttng.state.history;
 
-import java.util.LinkedList;
+import java.io.IOException;
+import java.util.Vector;
 import org.eclipse.linuxtools.lttng.event.LttngTimestamp;
 
 /**
@@ -19,14 +20,14 @@ import org.eclipse.linuxtools.lttng.event.LttngTimestamp;
  */
 public class StateHistoryInterface {
 
-	private LinkedList<CurrentStateTree> treeList;
+	private Vector<CurrentStateTree> treeList;
 	
 	
 	/**
 	 * Constructor
 	 */
 	public StateHistoryInterface() {
-		this.treeList = new LinkedList<CurrentStateTree>();
+		this.treeList = new Vector<CurrentStateTree>();
 	}
 	
 	/**
@@ -52,12 +53,21 @@ public class StateHistoryInterface {
 	}
 	
 	
-	
+	/**
+	 * Add a new StateTree to the list, by loading a file already existing on disk.
+	 * All the relevant parameters will be read from that file.
+	 * 
+	 * @param fileName Path/name of the already-existing State History file
+	 * @return The index this tree has in the list, or -1 if the file was not found.
+	 */
 	public int loadExistingStateHistoryFile(String fileName) {
-		//TODO NYI
-		
-		/* File was not found */
-		return -1;
+		try {
+			treeList.add( new CurrentStateTree(fileName, 100) );
+			return treeList.size()-1;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return -1;
+		}
 	}
 	
 	/**

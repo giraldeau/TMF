@@ -70,9 +70,10 @@ class StateHistoryTree {
 	 * "Reader" constructor : instantiate a SHTree from an existing tree file on disk
 	 * 
 	 * @param existingFileName : Name of the tree-file we are opening. This file must already exist.
+	 * @param table : The Quark Table in wich we will put the information read at the end of the file
 	 * @param cacheSize : size of the node cache, will be passed on to the TreeIO object
 	 */
-	public StateHistoryTree(String existingFileName, int cacheSize) throws IOException {
+	public StateHistoryTree(String existingFileName, QuarkTable table, int cacheSize) throws IOException {
 		/* 
 		 * Open the file ourselves, get the tree header information we need,
 		 * then pass on the descriptor to the TreeIO object.
@@ -91,6 +92,10 @@ class StateHistoryTree {
 		this.latestLeaf = desc.readInt();
 			
 		this.treeIO = new StateHistoryTreeIO(this, desc, nodeCount, cacheSize);
+		
+		/* Seek to after the Blocks section and read the table information */
+		desc.seek( getTreeHeaderSize() + nodeCount * BLOCKSIZE );
+		table = new QuarkTable(desc);
 	}
 	
 	/**
