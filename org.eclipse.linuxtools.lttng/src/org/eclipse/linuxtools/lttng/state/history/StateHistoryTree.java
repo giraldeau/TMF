@@ -98,13 +98,17 @@ class StateHistoryTree {
 	 * This method will cause the treeIO object to commit all nodes to disk
 	 * and then return the RandomAccessFile descriptor so the Tree object can
 	 * save its configuration into the header of the file.
+	 * 
+	 * @param table The QuarkTable, passed on from the CST, which we need to write at the end of the file
 	 */
-	public RandomAccessFile closeTree() {
+	public void closeTree(QuarkTable table) {
+		/* Write down anything that might be in the treeIO cache */
 		RandomAccessFile desc = treeIO.closeIO();
 		
 		/* Save the config of the tree to the header of the file */
 		try {
 			desc.seek(0);
+		
 			desc.writeInt(4112);	/* Magic number for this file type */
 			
 			desc.writeInt(BLOCKSIZE);
@@ -115,17 +119,18 @@ class StateHistoryTree {
 			desc.writeInt(depth);
 			desc.writeInt(rootNode);
 			desc.writeInt(latestLeaf);
+			/* done writing the file header */
 			
-			/* Seek to just after the Blocks section, where we will write the Quark Table information */
+			/* Seek to just after the Blocks section, then write the Quark Table information */
 			desc.seek( getTreeHeaderSize() + nodeCount * BLOCKSIZE );
-			
-			
+			table.writeSelf(desc);
+		
 		} catch (IOException e) {
-			assert ( false );
 			e.printStackTrace();
+			assert(false);
 		}
 		
-		return desc;
+		return;
 	}
 	
 	/**

@@ -88,9 +88,7 @@ class StateHistoryTreeInterval {
 				valueSize = (int) desc.readByte();	/* the first byte = the size to read */
 				
 				valueArray = new byte[valueSize];		//FIXME isn't there a way to generate the Strings object directly?
-				for (int i=0; i < valueSize; i++) {
-					valueArray[i] = desc.readByte();
-				}
+				desc.read(valueArray);
 				this.value = new StateValue( new String(valueArray) );
 				
 				/* Confirm the 0'ed byte at the end */

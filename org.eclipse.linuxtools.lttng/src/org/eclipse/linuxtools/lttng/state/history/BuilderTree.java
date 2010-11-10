@@ -48,6 +48,7 @@ class BuilderTree {
 	 * @param eventTime : The timestamp associated with this state change
 	 */
 	protected void processStateChange(int index, StateValue value, TimeValue eventTime) {
+		assert ( this.isActive );
 		StateHistoryTreeInterval newInterval;
 		
 		if ( index > ongoingStateInfo.size() ) {
@@ -91,7 +92,6 @@ class BuilderTree {
 	 * @param t The requested timestamp
 	 */
 	protected void doQuery(Vector<StateValue> stateInfo, TimeValue t) {
-		
 		assert( this.isActive );
 		assert( stateInfo.size() == ongoingStateInfo.size() );
 		
@@ -112,6 +112,7 @@ class BuilderTree {
 	 * @param t Timestamp to apply as the End Time of all intervals we'll create.
 	 */
 	protected void closeBuilderTree() {
+		assert( this.isActive );
 		StateHistoryTreeInterval newInterval;
 		
 		for ( int i=0; i < ongoingStateInfo.size(); i++ ) {
@@ -147,7 +148,17 @@ class BuilderTree {
 	 * @return The TimeValue corresponding to the latest existing timestamp
 	 */
 	private TimeValue getLatestEndTime() {
-		//TODO
+		assert( this.isActive );
+		assert ( ongoingStateStartTimes.size() >= 1 );	//this shouldn't get called on a tree with no information yet
+		TimeValue latestTV = ongoingStateStartTimes.get(0);
+		
+		/* We simply look in ongoingStateStartTimes for the latest value we can find */
+		for ( int i = 1; i < ongoingStateStartTimes.size(); i++ ) {
+			if ( latestTV.compareTo(ongoingStateStartTimes.get(i), false) > 1 ) {
+				latestTV = ongoingStateStartTimes.get(i);
+			}
+		}
+		return latestTV;
 	}
 	
 }

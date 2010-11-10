@@ -77,45 +77,38 @@ class StateHistoryTreeNode {
 	 * @param tree The container StateHistoryTree.
 	 * @param desc The RandomAccessFile descriptor. Needs to be positioned (seek'ed) where the node starts
 	 */
-	public StateHistoryTreeNode(StateHistoryTree tree, RandomAccessFile desc) {
+	public StateHistoryTreeNode(StateHistoryTree tree, RandomAccessFile desc) throws IOException {
 		
 		containerTree = tree;
 		
-		try {
-			/* Read the header */
-			nodeStart = new TimeValue(desc.readLong());
-			nodeEnd = new TimeValue(desc.readLong());
-			sequenceNumber = desc.readInt();
-			parentSequenceNumber = desc.readInt();
-			nbChildren = desc.readInt();
-			intervalCount = desc.readInt();
-			isDone = desc.readBoolean();
-			isFull = desc.readBoolean();
-			stringSectionOffset = desc.readInt();
-			
-			children = new int[containerTree.MAX_NB_CHILDREN];
-			for (int i=0; i < nbChildren; i++) {
-				children[i] = desc.readInt();
-			}
-			
-			this.childStart = new TimeValue[containerTree.MAX_NB_CHILDREN];
-			for (int i=0; i < nbChildren; i++) {
-				childStart[i] = new TimeValue(desc.readLong());
-			}
-			
-			/* Read the intervals information */
-			this.intervals = new Vector<StateHistoryTreeInterval>(intervalCount);
-			
-			for ( int i=0; i < intervalCount; i++ ) {
-				intervals.add( new StateHistoryTreeInterval(desc, this.getStartPositionInFile()) );
-			}
-			
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			System.exit(-1);
+		/* Read the header */
+		nodeStart = new TimeValue(desc.readLong());
+		nodeEnd = new TimeValue(desc.readLong());
+		sequenceNumber = desc.readInt();
+		parentSequenceNumber = desc.readInt();
+		nbChildren = desc.readInt();
+		intervalCount = desc.readInt();
+		isDone = desc.readBoolean();
+		isFull = desc.readBoolean();
+		stringSectionOffset = desc.readInt();
+		
+		children = new int[containerTree.MAX_NB_CHILDREN];
+		for (int i=0; i < nbChildren; i++) {
+			children[i] = desc.readInt();
 		}
+		
+		this.childStart = new TimeValue[containerTree.MAX_NB_CHILDREN];
+		for (int i=0; i < nbChildren; i++) {
+			childStart[i] = new TimeValue(desc.readLong());
+		}
+		
+		/* Read the intervals information */
+		this.intervals = new Vector<StateHistoryTreeInterval>(intervalCount);
+		
+		for ( int i=0; i < intervalCount; i++ ) {
+			intervals.add( new StateHistoryTreeInterval(desc, this.getStartPositionInFile()) );
+		}
+			
 	}
 	
 	/**

@@ -4,7 +4,6 @@
 
 package org.eclipse.linuxtools.lttng.state.history;
 
-import java.io.RandomAccessFile;
 import java.util.Hashtable;
 import java.util.Vector;
 
@@ -168,11 +167,9 @@ class CurrentStateTree {
 	 * 3) Write the Quark Table at the end of the file, so we can reopen it later.
 	 */
 	protected void closeTree() {
-		RandomAccessFile descriptor;
 		
-		builderTree.closeBuilderTree();			/* 1) */
-		descriptor = stateHistTree.closeTree();	/* 2) */
-		indexTable.writeSelf(descriptor);		/* 3) */
+		builderTree.closeBuilderTree();
+		stateHistTree.closeTree(indexTable);
 	}
 }
 

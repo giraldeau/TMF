@@ -4,7 +4,7 @@
 
 package org.eclipse.linuxtools.lttng.state.history;
 
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.util.Hashtable;
 import java.util.Vector;
 
@@ -35,13 +35,36 @@ public class QuarkTable {
 	
 	/**
 	 * Reading constructor, with which we create a QuarkTable object by reading an
-	 * already-saved one in a file.
-	 * See the writeSelf method below.
+	 * already-saved one in a file. See the writeSelf method below.
 	 * 
 	 * @param desc The descriptor from which to read, which must be positionned at the start of a QuarkTable section
 	 */
-	public QuarkTable(RandomAccessFile desc) {
-		//TODO todo below also
+	public QuarkTable(RandomAccessFile desc) throws IOException {
+		int sizeToRead, numberOfEntries;
+		byte byteArray[];
+		String stringToInsert;
+		
+		numberOfEntries = desc.readInt();
+		
+		this.conversionTable = new Hashtable<String, Integer>(numberOfEntries);
+		this.reverseConversionTable = new Vector<String>(numberOfEntries);
+		
+		for ( int i = 0; i < numberOfEntries; i++) {
+			/* Read the first byte = the number of characters in this String */
+			sizeToRead = (int) desc.readByte();
+			
+			/* Generate the String object */
+			byteArray = new byte[sizeToRead];
+			desc.read(byteArray);
+			stringToInsert = new String(byteArray);
+			
+			/* Make sure we didn't read garbage (there should be a 0 at the end) */
+			assert ( desc.readByte() == 0 );
+			
+			/* Insert that String into the two conversion tables */
+			conversionTable.put( stringToInsert, i);
+			reverseConversionTable.addElement(stringToInsert);
+		}
 	}
 	
 	
@@ -80,7 +103,28 @@ public class QuarkTable {
 	 * 
 	 * @param desc The (pre-seeked) RandomAccessFile descriptor to which we will write
 	 */
-	public void writeSelf(RandomAccessFile desc) {
-		//TODO decide on the file format then doo eet!
+	public void writeSelf(RandomAccessFile desc) throws IOException {
+		
+		/* First, write a Int representing the number of entries in the Vector */
+		desc.writeInt(reverseConversionTable.size());
+		
+		/* Then we write the data relevant to each entry:
+		 *  - An 8-bit integer (= a Byte) corresponding to the number of characters (bytes) to read for this entry
+		 *  - the String itself, in byte array form
+		 *  - a 0'ed byte at the end, to make sure we don't read corrupt data
+		 */
+		for ( int i = 0; i < reverseConversionTable.size(); i++ ) {
+			desc.writeByte( reverseConversionTable.get(i).length() );
+			desc.write( reverseConversionTable.get(i).getBytes() );
+			desc.writeByte(0);
+		}
+		return;
 	}
 }
+
+
+
+
+
+
+
