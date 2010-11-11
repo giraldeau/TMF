@@ -11,6 +11,7 @@
  *******************************************************************************/
 
 import org.eclipse.linuxtools.lttng.event.LttngEvent;
+import org.eclipse.linuxtools.lttng.event.LttngEventField;
 import org.eclipse.linuxtools.lttng.event.LttngTimestamp;
 import org.eclipse.linuxtools.lttng.trace.LTTngTrace;
 import org.eclipse.linuxtools.tmf.event.TmfEvent;
@@ -28,7 +29,7 @@ public class TmfTraceTest extends TmfEventRequest<LttngEvent> {
     
     
     // Path of the trace
-    public static final String TRACE_PATH = "/home/william/trace-614601events-nolost-newformat";
+    public static final String TRACE_PATH = "/home/francis/workspace/bench/trace-bonnie";
     
     // *** Change this to run several time over the same trace
     public static final int NB_OF_PASS = 1;
@@ -42,7 +43,8 @@ public class TmfTraceTest extends TmfEventRequest<LttngEvent> {
     public static int nbEvent = 0;
     public static int nbPassDone = 0;
     public static TmfExperiment<LttngEvent> fExperiment = null;
-    
+    public static long t1 = 0;
+    public static long t2 = 0;
     
 	public static void main(String[] args) {
 		
@@ -64,6 +66,7 @@ public class TmfTraceTest extends TmfEventRequest<LttngEvent> {
             // We will issue a request for each "pass".
             // TMF will then process them synchonously
             TmfTraceTest request = null;
+            t1 = System.nanoTime();
             for ( int x=0; x<NB_OF_PASS; x++ ) {
                 request = new TmfTraceTest(LttngEvent.class, tmpRange, Integer.MAX_VALUE );
         		fExperiment.sendRequest(request);
@@ -84,7 +87,7 @@ public class TmfTraceTest extends TmfEventRequest<LttngEvent> {
     public void handleData(LttngEvent event) {
 		super.handleData(event);
         if ( (event != null) && (PARSE_EVENTS) ) {
-            ((LttngEvent) event).getContent().getFields();
+            LttngEventField[] fields = ((LttngEvent) event).getContent().getFields();
             
             // *** Uncomment the following to print the parsed content
             // Warning : this is VERY intensive
@@ -98,10 +101,14 @@ public class TmfTraceTest extends TmfEventRequest<LttngEvent> {
 	
     @Override
     public void handleCompleted() {
+    	t2 = System.nanoTime();
             if ( nbPassDone >= NB_OF_PASS ) {
                 try {
-                	System.out.println("Nb events : " + nbEvent);
-                	
+                	float enlaps = (t2 - t1) / 1000000000;
+                	float throughtput = nbEvent / enlaps;
+                	System.out.println("Nb events   : " + nbEvent);
+                	System.out.println("Enlaps      : " + enlaps);
+                	System.out.println("Throughtput : " + throughtput);
                     fExperiment.sendRequest(null);
                }
                catch (Exception e) {}

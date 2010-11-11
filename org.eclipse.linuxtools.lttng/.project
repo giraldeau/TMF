@@ -3,6 +3,21 @@
 	<name>org.eclipse.linuxtools.lttng</name>
 	<comment></comment>
 	<projects>
+		<project>org.eclipse.linuxtools.lttng-feature</project>
+		<project>org.eclipse.linuxtools.lttng.headless</project>
+		<project>org.eclipse.linuxtools.lttng.help</project>
+		<project>org.eclipse.linuxtools.lttng.jni</project>
+		<project>org.eclipse.linuxtools.lttng.test-feature</project>
+		<project>org.eclipse.linuxtools.lttng.tests</project>
+		<project>org.eclipse.linuxtools.lttng.ui</project>
+		<project>org.eclipse.linuxtools.lttng.ui.tests</project>
+		<project>org.eclipse.linuxtools.tmf</project>
+		<project>org.eclipse.linuxtools.tmf-feature</project>
+		<project>org.eclipse.linuxtools.tmf.doc</project>
+		<project>org.eclipse.linuxtools.tmf.test-feature</project>
+		<project>org.eclipse.linuxtools.tmf.tests</project>
+		<project>org.eclipse.linuxtools.tmf.ui</project>
+		<project>org.eclipse.linuxtools.tmf.ui.tests</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
