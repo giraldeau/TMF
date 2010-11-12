@@ -41,7 +41,7 @@ class CurrentStateTree {
 	private BuilderTree builderTree;
 	
 	/* The quark table, that allows to convert path-strings into integers (that will be used in the SHT) */
-	private QuarkTable indexTable;
+	private PathConversionTable indexTable;
 	
 	/* The state info vector, which will contain the "system state" at one given requested time
 	 * currentStateInfo.size() = number of different entries we've seen so far */
@@ -63,7 +63,7 @@ class CurrentStateTree {
 	protected CurrentStateTree(String newTreeFileName, TimeValue treeStart,
 							int blockSize, int maxChildren, int cacheSize) {
 		
-		this.indexTable = new QuarkTable();
+		this.indexTable = new PathConversionTable();
 		this.currentStateInfo = new Vector<StateValue>();
 		
 		this.stateHistTree = new StateHistoryTree( newTreeFileName, treeStart, blockSize, maxChildren, cacheSize);
@@ -93,14 +93,15 @@ class CurrentStateTree {
 		/* Rebuild the "filesystem" paths */
 		this.root = new Path("root", -1);
 		for ( int i = 0; i < indexTable.getSize(); i++ ) {
-			processPath( indexTable.getMatchingString(i) );
+			processPath( indexTable.getMatchingKey(i) );
 		}
 	}
 	
 	/**
 	 * Accessors
 	 */
-	protected StateValue getStateValue(String path) {
+	
+	protected StateValue getStateValue(Vector<String> path) {
 		return currentStateInfo.get( indexTable.getMatchingInt(path) );
 	}
 	
@@ -113,16 +114,16 @@ class CurrentStateTree {
 	 * @param value The StateValue (the interface built for us) which we need to associate to this entry
 	 * @param eventTime The timestamp of this state-change
 	 */
-	protected void readStateChange(String pathAsString, StateValue value, TimeValue eventTime) {
+	protected void readStateChange(Vector<String> path, StateValue value, TimeValue eventTime) {
 		
-		if ( indexTable.containsEntry(pathAsString)) {
+		if ( indexTable.containsEntry(path)) {
 			/* We have seen this entry name before, it should (hopefully) be in all the tables already.
 			 * We only need to pass it to the Builder Tree so it can do its thing with it. */
-			builderTree.processStateChange( indexTable.getMatchingInt(pathAsString), value, eventTime );
+			builderTree.processStateChange( indexTable.getMatchingInt(path), value, eventTime );
 			
 		} else {
 			/* The request entry is not in the tables. So we add it to them, THEN pass it on to the builder tree. */
-			builderTree.processStateChange( processPath(pathAsString), value, eventTime );
+			builderTree.processStateChange( processPath(path), value, eventTime );
 		}
 		
 	}
@@ -131,30 +132,24 @@ class CurrentStateTree {
 	 * Function that will be called when we see a new entry in the quark table, which means we
 	 * also need a new entry (or more than one) in the database.
 	 * 
-	 * @param pathAsString The dash-separated string that got passed on from the StateHistoryInterface.
-	 * @return The integer representation of the (complete) String in the quark table
+	 * @param path The path formatted as a vector of strings, which got passed on from the StateHistoryInterface.
+	 * @return The integer representation of the (complete) path in the quark table
 	 */
-	private int processPath(String pathAsString) {
+	private int processPath(Vector<String> path) {
 		Path currentPath = this.root;
-		String currentString;
-		String[] components = pathAsString.split("/");
+		Vector<String> currentSubVector = new Vector<String>();
 		
-		for ( int i=0; i < components.length; i++) {
-			/* Generate the partial String we are now processing */
-			currentString = components[0];
-			for ( int j=1; j <= i; j++ ) {
-				currentString += "/" + components[j];
+		for ( int i = 0; i < path.size(); i++ ) {
+			currentSubVector.add( path.get(i) );
+			if ( !indexTable.containsEntry(currentSubVector) ) {
+				/* We need to add this partial path to the table */
+				currentPath.addSubPath( path.get(i), currentStateInfo.size() );
+				currentStateInfo.add(null);			/* just to increment the size */
+				indexTable.addEntry(currentSubVector);
 			}
-			
-			if ( !indexTable.containsEntry(currentString) ) {
-				/* We need to add this partial path to the tables */
-				currentPath.addSubPath(components[i], currentStateInfo.size() );
-				currentStateInfo.add(null);		/* just to increment the size */
-				indexTable.addEntry(currentString);
-				
-			}
-			currentPath = currentPath.getSubPath(components[i]);
+			currentPath = currentPath.getSubPath( path.get(i) );
 		}
+		
 		return currentStateInfo.size()-1;
 	}
 	
@@ -167,10 +162,23 @@ class CurrentStateTree {
 	 * @param t Target time
 	 */
 	protected void setStateAtTime(TimeValue t) {
+		nullifyStateInfo();
 		stateHistTree.doQuery(currentStateInfo, t);
 		
 		if ( builderTree.isActive() ) {
 			builderTree.doQuery(currentStateInfo, t);
+		}
+	}
+	
+	/**
+	 * Simple method to write -1/null to all the contents of currentStateInfo.
+	 * This should always be called before recreating the state info, since not all
+	 * state information may be available at all times
+	 * (and -1 means "this attribute didn't exist at that time")
+	 */
+	private void nullifyStateInfo() {
+		for ( int i = 0; i < currentStateInfo.size(); i++ ) {
+			currentStateInfo.get(i).setNull();
 		}
 	}
 	
