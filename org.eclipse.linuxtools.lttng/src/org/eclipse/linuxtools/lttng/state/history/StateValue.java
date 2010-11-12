@@ -55,6 +55,10 @@ class StateValue {
 		return type;
 	}
 	
+	public boolean isNull() {
+		return ( (valueInt == -1) && (valueStr == null) );
+	}
+	
 	public int getValueInt() {
 		assert( type == 0 );
 		return valueInt;

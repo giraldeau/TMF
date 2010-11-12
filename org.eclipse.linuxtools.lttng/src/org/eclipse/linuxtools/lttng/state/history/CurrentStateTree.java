@@ -48,7 +48,7 @@ class CurrentStateTree {
 	private Vector<StateValue> currentStateInfo;
 	
 	/* Finally, the root of the /proc-like filesystem tree, which is the human-usable index to read the stateInfo */
-	private Path root;
+	private final Path root;
 	
 	
 	/**
@@ -105,6 +105,16 @@ class CurrentStateTree {
 		return currentStateInfo.get( indexTable.getMatchingInt(path) );
 	}
 	
+	private Path getMatchingPath(Vector<String> attribute) {
+		assert ( indexTable.containsEntry(attribute) );
+		Path currentPath = root;
+		
+		for ( int i = 0; i < attribute.size(); i++ ) {
+			currentPath = currentPath.getSubPath(attribute.get(i));
+		}
+		return currentPath;
+	}
+	
 	/**
 	 * A state-changing event was passed on from the Interface.
 	 * We need to check if it's in the quark database, in the /proc-like FS,
@@ -151,6 +161,29 @@ class CurrentStateTree {
 		}
 		
 		return currentStateInfo.size()-1;
+	}
+	
+	/**
+	 * Helper method to set "null" values to the given path but also to all its children
+	 * (a bit like "rm -rf")
+	 * 
+	 * @param path The attribute we want to set to null, including all its children
+	 * @param t The timestamp associated with this state change
+	 */
+	protected void removeAttribute(Vector<String> attribute, TimeValue t) {
+		assert ( indexTable.containsEntry(attribute) );
+		
+		Path currentPath = getMatchingPath(attribute);
+		
+	}
+	
+	private void nullifyPath(Path currentPath, TimeValue t) {
+		/* "Nullify our children first, recursively */
+		for ( int i = 0; i < currentPath.getNbSubPaths(); i++ ) {
+			nullifyPath(currentPath.getSubPath(i), t);
+		}
+		/* Nullify ourselves */
+		
 	}
 	
 	/**
@@ -242,6 +275,20 @@ class Path {
 		return key;
 	}
 	
+	protected Path getSubPath(String subPathName) {
+		assert( lookup.containsKey(subPathName) );
+		return subDirs.get( lookup.get(subPathName) );
+	}
+	
+	protected Path getSubPath(int index) {
+		assert ( index < subDirs.size() );
+		return subDirs.get(index);
+	}
+	
+	protected int getNbSubPaths() {
+		return subDirs.size();
+	}
+	
 	
 	protected void addSubPath(String subPathName, int key) {
 		assert ( !lookup.containsKey(subPathName) );
@@ -249,10 +296,7 @@ class Path {
 		subDirs.add( new Path(subPathName, key) );
 	}
 	
-	protected Path getSubPath(String subPathName) {
-		assert( lookup.containsKey(subPathName) );
-		return subDirs.get( lookup.get(subPathName) );
-	}
+	
 }
 
 

@@ -53,31 +53,38 @@ class BuilderTree {
 		
 		if ( index > ongoingStateInfo.size() ) {
 			/* We are in the presence of a new "state info" this tree hasn't seen so far,
-			 * so we need to add a new element to the 2 vectors.
-			 */
-			assert( index == ongoingStateInfo.size() + 1 );	/* If not, this would mean we have missed a previous even the CST has read, which would be bad */
+			 * so we need to add a new element to the 2 vectors. */
+			
+			/* If these are not true, this would mean we have missed a previous even the CST has read, which would be bad */
+			assert( index == ongoingStateInfo.size() + 1 );
 			assert( index == ongoingStateStartTimes.size() + 1);
+			
+			/* We shouldn't be inserting a "new" null value in any case */
+			assert ( !value.isNull() );
 			
 			ongoingStateInfo.add(value);
 			ongoingStateStartTimes.add(eventTime);
 			
 		} else {
-			/* We are reading an entry we already have in the tree, which means we're modifying it.
-			 * We need to generate a SHTInterval from that information and insert it in the History tree.
-			 */
+			/* We are reading an entry we already have seen in the tree */
+			if ( !ongoingStateInfo.get(index).isNull() ) {
+				/* We are replacing a state that is currently already in the Builder Tree, which means
+				 * we need to create an interval to be inserted in the State History.
+				 */
+				newInterval = new StateHistoryTreeInterval(
+						ongoingStateStartTimes.get(index),		/* Start Time */
+						eventTime,								/* End Time */
+						index,									/* "key" */
+						ongoingStateInfo.get(index) );			/* StateValue */
 
-			newInterval = new StateHistoryTreeInterval(
-									ongoingStateStartTimes.get(index),		/* Start Time */
-									eventTime,								/* End Time */
-									index,									/* "key" */
-									ongoingStateInfo.get(index) );			/* StateValue */
+				stateHistTree.insertInterval(newInterval);
+			}
 			
-			stateHistTree.insertInterval(newInterval);
-			
-			/* Replace this spot in the Builder Tree with the new information from the event */
+			/* Finally, we write the new information in the Builder Tree */
 			ongoingStateInfo.set(index, value);
 			ongoingStateStartTimes.set(index, eventTime);
 		}
+		return;
 		
 	}
 	
@@ -96,6 +103,11 @@ class BuilderTree {
 		assert( stateInfo.size() == ongoingStateInfo.size() );
 		
 		for ( int i=0; i < ongoingStateInfo.size(); i++ ) {
+			/* NOTE: here, if we see "null" values, we will write them over in the stateInfo (uselessly)
+			 * In cases where we have more non-null values than null ones, this should be faster than testing every single one of them
+			 * TODO is this usually the case?
+			 */
+			
 			/* If the information about 'i' at time 't' is in this tree, return it */
 			if ( t.compareTo(ongoingStateStartTimes.get(i), false) >= 0 ) {
 				stateInfo.set(i, ongoingStateInfo.get(i) );
@@ -116,14 +128,15 @@ class BuilderTree {
 		StateHistoryTreeInterval newInterval;
 		
 		for ( int i=0; i < ongoingStateInfo.size(); i++ ) {
-			
-			newInterval = new StateHistoryTreeInterval(
-					ongoingStateStartTimes.get(i),		/* Start Time */
-					getLatestEndTime(),					/* End Time */
-					i,									/* "key" */
-					ongoingStateInfo.get(i) );			/* StateValue */
-			
-			stateHistTree.insertInterval(newInterval);
+			if ( !ongoingStateInfo.get(i).isNull() ) {
+				newInterval = new StateHistoryTreeInterval(
+						ongoingStateStartTimes.get(i),		/* Start Time */
+						getLatestEndTime(),					/* End Time */
+						i,									/* "key" */
+						ongoingStateInfo.get(i) );			/* StateValue */
+				
+				stateHistTree.insertInterval(newInterval);
+			}
 		}
 		
 		ongoingStateInfo.clear();
