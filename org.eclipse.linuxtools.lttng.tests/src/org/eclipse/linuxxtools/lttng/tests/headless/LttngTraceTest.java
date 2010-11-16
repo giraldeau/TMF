@@ -1,3 +1,4 @@
+package org.eclipse.linuxxtools.lttng.tests.headless;
 /*******************************************************************************
  * Copyright (c) 2009 Ericsson
  * 
@@ -19,6 +20,7 @@ import org.eclipse.linuxtools.tmf.trace.TmfContext;
 import org.eclipse.linuxtools.tmf.trace.TmfTrace;
 
 
+@SuppressWarnings("nls")
 public class LttngTraceTest {
 
 	/**
