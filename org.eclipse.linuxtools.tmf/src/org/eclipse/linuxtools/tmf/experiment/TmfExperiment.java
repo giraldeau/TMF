@@ -124,7 +124,7 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
      * @param other
      */
     public TmfExperiment(TmfExperiment<T> other) {
-    	super(other.getName() + "(clone)", other.fType);
+    	super(other.getName() + "(clone)", other.fType); //$NON-NLS-1$
     	
     	fEpoch         = other.fEpoch;
     	fIndexPageSize = other.fIndexPageSize;
@@ -501,20 +501,30 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
 		}
 
 		// Scan the candidate events and identify the "next" trace to read from 
+        TmfEvent eventArray[] =  expContext.getEvents();
+        if (eventArray == null) {
+            return null;
+        }
 		int trace = TmfExperimentContext.NO_TRACE;
 		TmfTimestamp timestamp = TmfTimestamp.BigCrunch;
-		for (int i = 0; i < expContext.getTraces().length; i++) {
-			TmfEvent event = expContext.getEvents()[i];
-			if (event != null && event.getTimestamp() != null) {
-				TmfTimestamp otherTS = event.getTimestamp();
-				if (otherTS.compareTo(timestamp, true) < 0) {
-					trace = i;
-					timestamp = otherTS;
-				}
-			}
+        if (eventArray.length == 1) {
+            if (eventArray[0] != null) {
+                timestamp = eventArray[0].getTimestamp();
+                trace = 0;
+            }
+        } else {
+            for (int i = 0; i < eventArray.length; i++) {
+                TmfEvent event = eventArray[i];
+                if (event != null && event.getTimestamp() != null) {
+                    TmfTimestamp otherTS = event.getTimestamp();
+                    if (otherTS.compareTo(timestamp, true) < 0) {
+                        trace = i;
+                        timestamp = otherTS;
+                    }
+                }
+            }
 		}
-
-		// Update the experiment context and set the "next" event
+        // Update the experiment context and set the "next" event
 		TmfEvent event = null;
 		if (trace != TmfExperimentContext.NO_TRACE) {
 	        updateIndex(expContext, timestamp);
@@ -609,6 +619,7 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
+    @SuppressWarnings("nls")
 	public String toString() {
 		return "[TmfExperiment (" + getName() + ")]";
 	}
@@ -667,7 +678,7 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
 						startTime = new TmfTimestamp(ts);
 					lastTime = new TmfTimestamp(ts);
 
-					if ((getNbRead() % DEFAULT_INDEX_PAGE_SIZE) == 0) {
+					if ((getNbRead() % fIndexPageSize) == 0) {
 						updateExperiment();
 					}
 				}
@@ -787,7 +798,7 @@ public class TmfExperiment<T extends TmfEvent> extends TmfEventProvider<T> imple
 								nbRead[0] += getNbRead();
 							}
 							if (getNbRead() > CHUNK_SIZE[0]) {
-								System.out.println("ERROR - Read too many events");
+								System.out.println("ERROR - Read too many events"); //$NON-NLS-1$
 							}
 						}
 

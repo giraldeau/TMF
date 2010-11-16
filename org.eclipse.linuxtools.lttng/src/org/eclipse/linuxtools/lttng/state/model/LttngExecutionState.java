@@ -51,7 +51,7 @@ public class LttngExecutionState implements Cloneable {
             newState.change_LttTime = this.change_LttTime;
         }
         catch ( CloneNotSupportedException e ) {
-            System.out.println("Cloning failed with : " + e.getMessage() );
+            System.out.println("Cloning failed with : " + e.getMessage() ); //$NON-NLS-1$
         }
         
         return newState;
@@ -151,6 +151,7 @@ public class LttngExecutionState implements Cloneable {
 	}
 
     @Override
+    @SuppressWarnings("nls")
     public String toString() {
 		return "[LttngExecutionState: " + "entry=" + entry_LttTime + ",change=" + change_LttTime + ",cum_cpu=" + cum_cpu_time_Timens +
 		",pstatus=" + proc_status + ",emode=" + exec_mode + ",esubmode=" + exec_submode +"]";

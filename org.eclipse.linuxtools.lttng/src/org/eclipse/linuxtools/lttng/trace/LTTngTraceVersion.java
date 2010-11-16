@@ -143,12 +143,13 @@ public class LTTngTraceVersion {
 			tracepath = newTracepath;
 		}
 		catch (LttngException e) {
-			System.out.println("Could not get the trace version from the given path." +
-							   "Please check that the given path is a valid LTTng trace. (getTracepath)");
+			System.out.println("Could not get the trace version from the given path." + //$NON-NLS-1$
+							   "Please check that the given path is a valid LTTng trace. (getTracepath)"); //$NON-NLS-1$
 		}
 	}
 	
 	@Override
+    @SuppressWarnings("nls")
 	public String toString() {
 		return "LTTngTraceVersion : [" + getTraceFloatVersion() + "]";
 	}
