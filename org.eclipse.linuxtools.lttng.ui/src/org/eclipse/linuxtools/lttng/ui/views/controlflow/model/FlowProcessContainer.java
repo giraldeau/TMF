@@ -200,7 +200,7 @@ class ProcessKey {
 			}
         }
         else {
-        	TraceDebug.debug("ERROR : The given key is not of the type ProcessKey!" + obj.getClass().toString());
+        	TraceDebug.debug("ERROR : The given key is not of the type ProcessKey!" + obj.getClass().toString()); //$NON-NLS-1$
         }
         
         return isSame;
@@ -250,7 +250,8 @@ class ProcessKey {
     }
     
     
-    @Override
+	@Override
+    @SuppressWarnings("nls")
     public String toString() {
         if ( valueRef != null ) {
 			// return (valueRef.getPid().toString() + ":" +
