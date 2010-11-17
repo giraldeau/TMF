@@ -119,7 +119,7 @@ public class StateHistoryInterface {
 	 * the requested path.
 	 */
 	public void removeAttribute(int treeIndex, Vector<String> path, LttngTimestamp t) {
-		//TODO
+		treeList.get(treeIndex).removeAttribute(path, new TimeValue(t));
 	}
 	
 	public void removeAttribute(int treeIndex, String pathAsString, LttngTimestamp t) {

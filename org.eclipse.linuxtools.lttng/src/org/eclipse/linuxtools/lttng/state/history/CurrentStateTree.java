@@ -172,8 +172,7 @@ class CurrentStateTree {
 	 */
 	protected void removeAttribute(Vector<String> attribute, TimeValue t) {
 		assert ( indexTable.containsEntry(attribute) );
-		
-		Path currentPath = getMatchingPath(attribute);
+		nullifyPath( getMatchingPath(attribute), t );
 		
 	}
 	
@@ -183,7 +182,7 @@ class CurrentStateTree {
 			nullifyPath(currentPath.getSubPath(i), t);
 		}
 		/* Nullify ourselves */
-		
+		builderTree.processStateChange(currentPath.getKey(), new StateValue(), t);
 	}
 	
 	/**
@@ -224,7 +223,6 @@ class CurrentStateTree {
 	 * 3) Write the Quark Table at the end of the file, so we can reopen it later.
 	 */
 	protected void closeTree() {
-		
 		builderTree.closeBuilderTree();
 		stateHistTree.closeTree(indexTable);
 	}
