@@ -22,7 +22,6 @@ class TextdumpParser {
 	
 	private RandomAccessFile textdumpFile;
 	private StateHistoryInterface stateInterface;
-	private int treeIndex;
 	private QuarkTable<String> knownEventTypes;
 	
 	/**
@@ -30,9 +29,8 @@ class TextdumpParser {
 	 * @param filename Name of the trace textdump file to read
 	 * @param targetInterface SHInterface in which to send the state changes
 	 */
-	protected TextdumpParser(String filename, StateHistoryInterface targetInterface, int targetTreeIndex) {
+	protected TextdumpParser(String filename, StateHistoryInterface targetInterface) {
 		this.stateInterface = targetInterface;
-		this.treeIndex = targetTreeIndex;
 		this.knownEventTypes = new QuarkTable<String>();
 		registerKnownEvents();
 		
@@ -49,7 +47,7 @@ class TextdumpParser {
 			}
 			
 			/* Tell the Interface we are now done reading the trace and want to save everything to disk */
-			stateInterface.closeTree(treeIndex);
+			stateInterface.closeTree();
 			
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -156,11 +154,11 @@ class TextdumpParser {
 		System.out.println("Process #" + new_pid + " now scheduled on CPU " + cpu);
 		
 		/* Update "what is being run on which CPU" */
-		stateInterface.modifyAttribute(treeIndex, "System/CPUs/" + cpu + "/Scheduled_process", new_pid, timestamp);
+		stateInterface.modifyAttribute("System/CPUs/" + cpu + "/Scheduled_process", new_pid, timestamp);
 		
 		/* Update the status of the process that was scheduled and the one that was thrown out. */
-		stateInterface.modifyAttribute(treeIndex, "System/Processes/" + new_pid + "Current_state", "running", timestamp);
-		stateInterface.modifyAttribute(treeIndex, "System/Processes/" + old_pid + "Current_state", prevState, timestamp);
+		stateInterface.modifyAttribute("System/Processes/" + new_pid + "Current_state", "running", timestamp);
+		stateInterface.modifyAttribute("System/Processes/" + old_pid + "Current_state", prevState, timestamp);
 	}
 	
 	

@@ -88,9 +88,9 @@ class SHT_Tests {
 	@SuppressWarnings("unused")
 	private static void currentStateTest(String workingDir) {
 		StateHistoryInterface stateInterface = new StateHistoryInterface();
-		int a = stateInterface.createNewStateHistoryFile(workingDir + "testfile", new LttngTimestamp(0));
+		stateInterface.createNewStateHistoryFile(workingDir + "testfile", new LttngTimestamp(0));
 		
-		TextdumpParser parse = new TextdumpParser(workingDir + "dump.txt", stateInterface, a);
+		TextdumpParser parse = new TextdumpParser(workingDir + "dump.txt", stateInterface);
 	}
 	
 	public static void main(String[] args) {
