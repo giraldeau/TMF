@@ -165,7 +165,7 @@ public class StateHistoryInterface {
 	 * This method returns a value that was given as type 'int' for the given pathName.
 	 * 
 	 * @param treeIndex In which tree in the list we want to run this query
-	 * @param path The pathname (in the same format we inserted earlier) of the attribute we want
+	 * @param attribute The attribute we want
 	 * @return The value that was associated to this pathname at the requested time
 	 */
 	public int getStateValueInt(int treeIndex, Vector<String> attribute) {
@@ -188,6 +188,51 @@ public class StateHistoryInterface {
 		return getStateValueStr(treeIndex, convertStringToVector(attributeAsString));
 	}
 	
+	
+	/**
+	 * Alternative, singular version of the "getStateValue" methods.
+	 * 
+	 * These do not update the whole stateInfo vector, like loadStateAtTimes does. They only search
+	 * for one specific entry in the state history.
+	 * 
+	 * They should be used when you only want very few entries instead of the whole state (or many entries
+	 * but all at different timestamps). If you to request many entries all at the same time, you should use
+	 * the conventional loadStateAtTime() + getStateValue...()
+	 * 
+	 * @param treeIndex In which tree to run this query
+	 * @param attribute Which attribute we want to get the state of
+	 * @param t The timestamp at which we want the state
+	 * @return The integer State Value we previously inserted at this point/time.
+	 */
+	public int getSingleStateValueInt(int treeIndex, Vector<String> attribute, LttngTimestamp t) {
+		
+	}
+
+	public String getSingleStateValueStr(int treeIndex, Vector<String> attribute, LttngTimestamp t) {
+		
+	}
+	
+	/**
+	 * The "get next/previous state change" methods. Added by popular demand!
+	 * 
+	 * If you know what state a given attribute is in at a given moment, but you are interested in knowing
+	 * until when (or since when) it is or has been in that state, use this.
+	 * 
+	 * This is acutally a new feature of the State History, which wasn't really possible to do efficiently
+	 * with the old method.
+	 * 
+	 * @param treeIndex In which tree to run this query
+	 * @param attribute The attribute we want to know the state change
+	 * @param t *Any* timestamp we know the given attribute will be in the state we want to compare
+	 * @return The timestamp at which the attribute will stop (or started) being in that state
+	 */
+	public LttngTimestamp getNextStateChange(int treeIndex, Vector<String> attribute, LttngTimestamp t) {
+		
+	}
+	
+	public LttngTimestamp getPreviousStateChange(int treeIndex, Vector<String> attribute, LttngTimestamp t) {
+		
+	}
 	
 	/**
 	 * In case we want to support supplying path as slash-delimited Strings,
