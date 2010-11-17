@@ -93,18 +93,8 @@ public class StateHistoryInterface {
 		return;
 	}
 	
-	public void modifyAttribute(String attributeAsString, int valueInt, LttngTimestamp t) {
-		stateChange(convertStringToVector(attributeAsString), new StateValue(valueInt), new TimeValue(t));
-		return;
-	}
-	
 	public void modifyAttribute(Vector<String> attribute, String valueStr, LttngTimestamp t) {
 		stateChange(attribute, new StateValue(valueStr), new TimeValue(t));
-		return;
-	}
-	
-	public void modifyAttribute(String attributeAsString, String valueStr, LttngTimestamp t) {
-		stateChange(convertStringToVector(attributeAsString), new StateValue(valueStr), new TimeValue(t));
 		return;
 	}
 	
@@ -126,11 +116,6 @@ public class StateHistoryInterface {
 		assert ( treeLoaded );
 		innerCST.removeAttribute(attribute, new TimeValue(t));
 	}
-	
-	public void removeAttribute(String attributeAsString, LttngTimestamp t) {
-		removeAttribute(convertStringToVector(attributeAsString), t);
-	}
-	
 	
 	/**
 	 * This method indicates that we finished reading a trace file, and we should now
@@ -175,19 +160,10 @@ public class StateHistoryInterface {
 		return innerCST.getStateValue(attribute).getValueInt();
 	}
 	
-	public int getStateValueInt(String attributeAsString) {
-		return getStateValueInt(convertStringToVector(attributeAsString));
-	}
-	
 	public String getStateValueStr(Vector<String> attribute) {
 		assert ( treeLoaded );
 		return innerCST.getStateValue(attribute).getValueStr();
 	}
-	
-	public String getStateValueStr(String attributeAsString) {
-		return getStateValueStr(convertStringToVector(attributeAsString));
-	}
-	
 	
 	/**
 	 * Alternative, singular version of the "getStateValue" methods.
@@ -207,18 +183,10 @@ public class StateHistoryInterface {
 		assert ( treeLoaded );
 		return innerCST.getSingleStateValue( attribute, new TimeValue(t) ).getValueInt();
 	}
-
-	public int getSingleStateValueInt(String attributeAsString, LttngTimestamp t) {
-		return getSingleStateValueInt(convertStringToVector(attributeAsString), t);
-	}
 	
 	public String getSingleStateValueStr(Vector<String> attribute, LttngTimestamp t) {
 		assert ( treeLoaded );
 		return innerCST.getSingleStateValue( attribute, new TimeValue(t) ).getValueStr();
-	}
-	
-	public String getSingleStateValueStr(String attributeAsString, LttngTimestamp t) {
-		return getSingleStateValueStr(convertStringToVector(attributeAsString), t);
 	}
 	
 	/**
