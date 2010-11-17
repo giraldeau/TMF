@@ -80,28 +80,28 @@ public class StateHistoryInterface {
 	 * They will convert the path (if needed), value and timestamp to the internal class format.
 	 * 
 	 * @param treeIndex To which tree (in the treeList) we want to add this event. It was returned at the tree creation.
-	 * @param pathName The 'path' to which we want to add the record (ex.: {hostname, processes, PID2001, execMode} )
+	 * @param attribute The 'path' to which we want to add the record (ex.: {hostname, processes, PID2001, execMode} )
 	 * 					The single-string-with-slashes representation can also be used (it will be converted to a Vector)
 	 * @param valueInt (or valueStr) The value this entry needs to have (either String or int, ex.: "syscall" or '1234')
 	 * @param t The timestamp associated with this state change
 	 */
-	public void modifyAttribute(int treeIndex, Vector<String> path, int valueInt, LttngTimestamp t) {
-		stateChange(treeIndex, path, new StateValue(valueInt), new TimeValue(t));
+	public void modifyAttribute(int treeIndex, Vector<String> attribute, int valueInt, LttngTimestamp t) {
+		stateChange(treeIndex, attribute, new StateValue(valueInt), new TimeValue(t));
 		return;
 	}
 	
-	public void modifyAttribute(int treeIndex, String pathAsString, int valueInt, LttngTimestamp t) {
-		stateChange(treeIndex, convertPathToVector(pathAsString), new StateValue(valueInt), new TimeValue(t));
+	public void modifyAttribute(int treeIndex, String attributeAsString, int valueInt, LttngTimestamp t) {
+		stateChange(treeIndex, convertStringToVector(attributeAsString), new StateValue(valueInt), new TimeValue(t));
 		return;
 	}
 	
-	public void modifyAttribute(int treeIndex, Vector<String> path, String valueStr, LttngTimestamp t) {
-		stateChange(treeIndex, path, new StateValue(valueStr), new TimeValue(t));
+	public void modifyAttribute(int treeIndex, Vector<String> attribute, String valueStr, LttngTimestamp t) {
+		stateChange(treeIndex, attribute, new StateValue(valueStr), new TimeValue(t));
 		return;
 	}
 	
-	public void modifyAttribute(int treeIndex, String pathAsString, String valueStr, LttngTimestamp t) {
-		stateChange(treeIndex, convertPathToVector(pathAsString), new StateValue(valueStr), new TimeValue(t));
+	public void modifyAttribute(int treeIndex, String attributeAsString, String valueStr, LttngTimestamp t) {
+		stateChange(treeIndex, convertStringToVector(attributeAsString), new StateValue(valueStr), new TimeValue(t));
 		return;
 	}
 	
@@ -109,8 +109,8 @@ public class StateHistoryInterface {
 	 * Internal event-recording method, which will add a given state change to the
 	 * database. The methods lower down the stack will take care of generating the intervals, etc.
 	 */
-	private void stateChange(int treeIndex, Vector<String> path, StateValue value, TimeValue t) {
-		treeList.get(treeIndex).readStateChange(path, value, t);
+	private void stateChange(int treeIndex, Vector<String> attribute, StateValue value, TimeValue t) {
+		treeList.get(treeIndex).readStateChange(attribute, value, t);
 		return;
 	}
 	
@@ -118,12 +118,12 @@ public class StateHistoryInterface {
 	 * Similar to the above methods, except we will also "nullify" all the sub-contents of
 	 * the requested path.
 	 */
-	public void removeAttribute(int treeIndex, Vector<String> path, LttngTimestamp t) {
-		treeList.get(treeIndex).removeAttribute(path, new TimeValue(t));
+	public void removeAttribute(int treeIndex, Vector<String> attribute, LttngTimestamp t) {
+		treeList.get(treeIndex).removeAttribute(attribute, new TimeValue(t));
 	}
 	
-	public void removeAttribute(int treeIndex, String pathAsString, LttngTimestamp t) {
-		removeAttribute(treeIndex, convertPathToVector(pathAsString), t);
+	public void removeAttribute(int treeIndex, String attributeAsString, LttngTimestamp t) {
+		removeAttribute(treeIndex, convertStringToVector(attributeAsString), t);
 	}
 	
 	
@@ -168,24 +168,24 @@ public class StateHistoryInterface {
 	 * @param path The pathname (in the same format we inserted earlier) of the attribute we want
 	 * @return The value that was associated to this pathname at the requested time
 	 */
-	public int getStateValueInt(int treeIndex, Vector<String> path) {
-		StateValue value = treeList.get(treeIndex).getStateValue(path);
+	public int getStateValueInt(int treeIndex, Vector<String> attribute) {
+		StateValue value = treeList.get(treeIndex).getStateValue(attribute);
 		assert ( value.getType() == 0 );
 		return value.getValueInt();
 	}
 	
-	public int getStateValueInt(int treeIndex, String pathAsString) {
-		return getStateValueInt(treeIndex, convertPathToVector(pathAsString));
+	public int getStateValueInt(int treeIndex, String attributeAsString) {
+		return getStateValueInt(treeIndex, convertStringToVector(attributeAsString));
 	}
 	
-	public String getStateValueStr(int treeIndex, Vector<String> path) {
-		StateValue value = treeList.get(treeIndex).getStateValue(path);
+	public String getStateValueStr(int treeIndex, Vector<String> attribute) {
+		StateValue value = treeList.get(treeIndex).getStateValue(attribute);
 		assert ( value.getType() == 1 );
 		return value.getValueStr();
 	}
 	
-	public String getStateValueStr(int treeIndex, String pathAsString) {
-		return getStateValueStr(treeIndex, convertPathToVector(pathAsString));
+	public String getStateValueStr(int treeIndex, String attributeAsString) {
+		return getStateValueStr(treeIndex, convertStringToVector(attributeAsString));
 	}
 	
 	
@@ -194,25 +194,25 @@ public class StateHistoryInterface {
 	 * instead of Vectors of Strings, we can use this method to go from the former
 	 * to the latter.
 	 * 
-	 * @param pathAsString The path as string. duh
-	 * @return The same path, but with slashes stripped out and formatted as Vector<String>
+	 * @param slashSeparatedString The slash-separated string. duh
+	 * @return A Vector<String> containing the partial strings, with the slashes stripped out
 	 */
-	protected static Vector<String> convertPathToVector(String pathAsString) {
+	protected static Vector<String> convertStringToVector(String slashSeparatedString) {
 		String components[];
-		Vector<String> path = new Vector<String>();
+		Vector<String> componentVector = new Vector<String>();
 		
 		/* Strip the leading or trailing slashes in the path, if any */
-		if ( pathAsString.charAt(0) == '/' ) {
-			pathAsString = pathAsString.substring(1);
+		if ( slashSeparatedString.charAt(0) == '/' ) {
+			slashSeparatedString = slashSeparatedString.substring(1);
 		}
-		if ( pathAsString.charAt(pathAsString.length()-1) == '/') {
-			pathAsString = pathAsString.substring(0, pathAsString.length()-1);
+		if ( slashSeparatedString.charAt(slashSeparatedString.length()-1) == '/') {
+			slashSeparatedString = slashSeparatedString.substring(0, slashSeparatedString.length()-1);
 		}
 		
-		components = pathAsString.split("/");
+		components = slashSeparatedString.split("/");
 		for ( int i = 0; i < components.length; i++ ) {
-			path.add(components[i]);
+			componentVector.add(components[i]);
 		}
-		return path;
+		return componentVector;
 	}
 }

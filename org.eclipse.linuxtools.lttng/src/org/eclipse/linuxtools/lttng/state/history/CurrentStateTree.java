@@ -93,7 +93,7 @@ class CurrentStateTree {
 		/* Rebuild the "filesystem" paths */
 		this.root = new Path("root", -1);
 		for ( int i = 0; i < indexTable.getSize(); i++ ) {
-			processPath( indexTable.getMatchingKey(i) );
+			processNewAttribute( indexTable.getMatchingKey(i) );
 		}
 	}
 	
@@ -101,8 +101,8 @@ class CurrentStateTree {
 	 * Accessors
 	 */
 	
-	protected StateValue getStateValue(Vector<String> path) {
-		return currentStateInfo.get( indexTable.getMatchingInt(path) );
+	protected StateValue getStateValue(Vector<String> attribute) {
+		return currentStateInfo.get( indexTable.getMatchingInt(attribute) );
 	}
 	
 	private Path getMatchingPath(Vector<String> attribute) {
@@ -124,16 +124,16 @@ class CurrentStateTree {
 	 * @param value The StateValue (the interface built for us) which we need to associate to this entry
 	 * @param eventTime The timestamp of this state-change
 	 */
-	protected void readStateChange(Vector<String> path, StateValue value, TimeValue eventTime) {
+	protected void readStateChange(Vector<String> attribute, StateValue value, TimeValue eventTime) {
 		
-		if ( indexTable.containsEntry(path)) {
+		if ( indexTable.containsEntry(attribute)) {
 			/* We have seen this entry name before, it should (hopefully) be in all the tables already.
 			 * We only need to pass it to the Builder Tree so it can do its thing with it. */
-			builderTree.processStateChange( indexTable.getMatchingInt(path), value, eventTime );
+			builderTree.processStateChange( indexTable.getMatchingInt(attribute), value, eventTime );
 			
 		} else {
 			/* The request entry is not in the tables. So we add it to them, THEN pass it on to the builder tree. */
-			builderTree.processStateChange( processPath(path), value, eventTime );
+			builderTree.processStateChange( processNewAttribute(attribute), value, eventTime );
 		}
 		
 	}
@@ -145,19 +145,19 @@ class CurrentStateTree {
 	 * @param path The path formatted as a vector of strings, which got passed on from the StateHistoryInterface.
 	 * @return The integer representation of the (complete) path in the quark table
 	 */
-	private int processPath(Vector<String> path) {
+	private int processNewAttribute(Vector<String> attribute) {
 		Path currentPath = this.root;
 		Vector<String> currentSubVector = new Vector<String>();
 		
-		for ( int i = 0; i < path.size(); i++ ) {
-			currentSubVector.add( path.get(i) );
+		for ( int i = 0; i < attribute.size(); i++ ) {
+			currentSubVector.add( attribute.get(i) );
 			if ( !indexTable.containsEntry(currentSubVector) ) {
 				/* We need to add this partial path to the table */
-				currentPath.addSubPath( path.get(i), currentStateInfo.size() );
+				currentPath.addSubPath( attribute.get(i), currentStateInfo.size() );
 				currentStateInfo.add(null);			/* just to increment the size */
 				indexTable.addEntry(currentSubVector);
 			}
-			currentPath = currentPath.getSubPath( path.get(i) );
+			currentPath = currentPath.getSubPath( attribute.get(i) );
 		}
 		
 		return currentStateInfo.size()-1;

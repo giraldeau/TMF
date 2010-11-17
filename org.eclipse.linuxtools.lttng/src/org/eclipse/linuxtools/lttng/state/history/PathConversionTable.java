@@ -65,7 +65,7 @@ class PathConversionTable extends QuarkTable<Vector<String>> {
 			assert ( desc.readByte() == 0 );
 			
 			/* Create the inner vector object from the /-delimited components */
-			innerVector = StateHistoryInterface.convertPathToVector(completeString);
+			innerVector = StateHistoryInterface.convertStringToVector(completeString);
 			
 			/* Insert that Vector into the two conversion tables */
 			conversionTable.put( innerVector, i);
