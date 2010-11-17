@@ -39,4 +39,19 @@ class TimeValue extends LttngTimestamp {
 		this.fPrecision = t.getPrecision();
 	}
 	
+	/**
+	 * Returns if this timestamp intersects the Interval passed in parameter
+	 * 
+	 * @param interval The SHTInterval to compare
+	 * @return Y/N
+	 */
+	protected boolean intersects(StateHistoryTreeInterval interval) {
+		if ( this.compareTo( interval.getEnd(), false) <= 0 ) {
+			if ( this.compareTo( interval.getStart(), false) >= 0 ) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 }

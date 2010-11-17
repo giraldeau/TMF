@@ -293,16 +293,31 @@ class StateHistoryTreeNode {
 		 */
 		
 		for ( int i = 0; i < intervalCount; i++ ) {
-			
-			/* if:  t intersects intervals[i] then: write its value in stateInfo */
-			if ( t.compareTo( intervals.get(i).getEnd(), false) <= 0 ) {
-				if ( t.compareTo( intervals.get(i).getStart(), false) >= 0 ) {
-					stateInfo.set( intervals.get(i).getKey(), intervals.get(i).getValue() );
+			if ( t.intersects(intervals.get(i)) ) {
+				stateInfo.set( intervals.get(i).getKey(), intervals.get(i).getValue() );
+			}
+		}
+		return;
+	}
+	
+	/**
+	 * Get a single StateValue from the information in this node
+	 * If the key/timestamp pair cannot be found, we return null.
+	 * 
+	 * @param key
+	 * @param t
+	 * @return The relevant StateValue if it was found here, or null if it wasn't
+	 */
+	protected StateValue probeNode(int key, TimeValue t) {
+		for ( int i = 0; i < intervalCount; i++ ) {
+			if ( intervals.get(i).getKey() == key ) {
+				if ( t.intersects(intervals.get(i)) ) {
+					return intervals.get(i).getValue();
 				}
 			}
 		}
-		
-		return;
+		/* We didn't find the relevant information in this node */
+		return null;
 	}
 
 	/**

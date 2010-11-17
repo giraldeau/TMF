@@ -101,10 +101,30 @@ class CurrentStateTree {
 	 * Accessors
 	 */
 	
+	/**
+	 * Conventional getter to retrieve the StateValue in the generated currentStateInfo
+	 */
 	protected StateValue getStateValue(Vector<String> attribute) {
 		return currentStateInfo.get( indexTable.getMatchingInt(attribute) );
 	}
 	
+	/**
+	 * Alternate, singular getter method. This launches a search in the Builder Tree and SHT
+	 * without re-generating the whole current state.
+	 * 
+	 * It's more efficient to use this if we want very few queries for the same timestamp.
+	 * 
+	 */
+	protected StateValue getSingleStateValue(Vector<String> attribute, TimeValue t) {
+		return builderTree.doSingularQuery( indexTable.getMatchingInt(attribute), t);
+	}
+	
+	/**
+	 * Internal method to convert from a Vector-type attribute to the Path/sub-path element
+	 * 
+	 * @param attribute
+	 * @return
+	 */
 	private Path getMatchingPath(Vector<String> attribute) {
 		assert ( indexTable.containsEntry(attribute) );
 		Path currentPath = root;

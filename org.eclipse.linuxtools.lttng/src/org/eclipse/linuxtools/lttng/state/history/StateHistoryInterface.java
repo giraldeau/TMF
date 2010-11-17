@@ -157,6 +157,7 @@ public class StateHistoryInterface {
 	 * @param t We will recreate the state information to what it was at time t.
 	 */
 	public void loadStateAtTime(LttngTimestamp t) {
+		assert ( treeLoaded );
 		innerCST.setStateAtTime( new TimeValue(t) );
 		return;
 	}
@@ -171,9 +172,7 @@ public class StateHistoryInterface {
 	 */
 	public int getStateValueInt(Vector<String> attribute) {
 		assert ( treeLoaded );
-		StateValue value = innerCST.getStateValue(attribute);
-		assert ( value.getType() == 0 );
-		return value.getValueInt();
+		return innerCST.getStateValue(attribute).getValueInt();
 	}
 	
 	public int getStateValueInt(String attributeAsString) {
@@ -182,9 +181,7 @@ public class StateHistoryInterface {
 	
 	public String getStateValueStr(Vector<String> attribute) {
 		assert ( treeLoaded );
-		StateValue value = innerCST.getStateValue(attribute);
-		assert ( value.getType() == 1 );
-		return value.getValueStr();
+		return innerCST.getStateValue(attribute).getValueStr();
 	}
 	
 	public String getStateValueStr(String attributeAsString) {
@@ -207,11 +204,21 @@ public class StateHistoryInterface {
 	 * @return The integer State Value we previously inserted at this point/time.
 	 */
 	public int getSingleStateValueInt(Vector<String> attribute, LttngTimestamp t) {
-		
+		assert ( treeLoaded );
+		return innerCST.getSingleStateValue( attribute, new TimeValue(t) ).getValueInt();
 	}
 
+	public int getSingleStateValueInt(String attributeAsString, LttngTimestamp t) {
+		return getSingleStateValueInt(convertStringToVector(attributeAsString), t);
+	}
+	
 	public String getSingleStateValueStr(Vector<String> attribute, LttngTimestamp t) {
-		
+		assert ( treeLoaded );
+		return innerCST.getSingleStateValue( attribute, new TimeValue(t) ).getValueStr();
+	}
+	
+	public String getSingleStateValueStr(String attributeAsString, LttngTimestamp t) {
+		return getSingleStateValueStr(convertStringToVector(attributeAsString), t);
 	}
 	
 	/**
@@ -220,7 +227,7 @@ public class StateHistoryInterface {
 	 * If you know what state a given attribute is in at a given moment, but you are interested in knowing
 	 * until when (or since when) it is or has been in that state, use this.
 	 * 
-	 * This is acutally a new feature of the State History, which wasn't really possible to do efficiently
+	 * This is actually a new feature of the State History, which wasn't really possible to do efficiently
 	 * with the old method.
 	 * 
 	 * @param attribute The attribute we want to know the state change

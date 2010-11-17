@@ -117,6 +117,29 @@ class BuilderTree {
 	}
 	
 	/**
+	 * The "singular query" method, which returns a StateValue at a given time without
+	 * re-updating the whole current State.
+	 * 
+	 * If the information is currently in here, we simply return it. If not, we go look
+	 * in the State History Tree
+	 * 
+	 * @param index The index in the ongoing... tables. = the integer representation of the attribute
+	 * @param t The TimeValue of the query
+	 * @return The StateValue associated to that attribute/timestamp
+	 */
+	protected StateValue doSingularQuery(int index, TimeValue t) {
+		if ( this.isActive ) {
+			if ( t.compareTo( ongoingStateStartTimes.get(index), false) > 0 ) {
+				/* The information we want is currently located in this Builder Tree */
+				return ongoingStateInfo.get(index);
+			}
+		} 
+		/* else */
+		/* We don't have the information at hand, we'll need to go look in the SHT */
+		return stateHistTree.doSingularQuery(index, t);
+	}
+	
+	/**
 	 * Close off the Builder Tree, used for example when we are done reading a static trace file
 	 * All the information currently contained in it will be converted to intervals and inserted
 	 * in the State History.

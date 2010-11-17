@@ -377,27 +377,14 @@ class StateHistoryTree {
 	 * @param stateInfo : the currentStateInfo of the CurrentStateTree, which this method will fill up
 	 * @param t : the timestamp for which we want the query
 	 */
-	public void doQuery(Vector<StateValue> stateInfo, TimeValue t) {
-		int potentialNext = 0;
+	protected void doQuery(Vector<StateValue> stateInfo, TimeValue t) {
 		/* We start by reading the information in the root node */
 		StateHistoryTreeNode currentNode = treeIO.readNode(rootNode);
 		currentNode.getInfoFromNode(stateInfo, t);
 		
+		/* Then we follow the branch down in the relevant children */
 		while ( currentNode.getNbChildren() > 0 ) {
-			/* Look at the children's start times, to see which branch we must follow next */
-			for ( int i = 0; i < currentNode.getNbChildren(); i++ ) {
-				if ( t.compareTo(currentNode.getChildStart(i), false) >= 0 ) {
-					potentialNext = currentNode.getChild(i);
-				} else {
-					break;
-				}
-			}
-			/* Once we exit this loop, we should have found a children to follow.
-			 * If we didn't, there's a problem. */
-			assert ( potentialNext != currentNode.getSequenceNumber() );
-			
-			/* Go into this next node, and repeat until we get to the leaf level */
-			currentNode = treeIO.readNode(potentialNext);
+			currentNode = selectNextChild(currentNode, t);
 			currentNode.getInfoFromNode(stateInfo, t);
 		}
 		
@@ -405,7 +392,41 @@ class StateHistoryTree {
 		 * back to the Current State Tree. */
 		return;
 	}
-
+	
+	/**
+	 * Run a "singular query" on the SHT. This means looking into one branch for
+	 * information about a key/timestamp pair without updating a complete stateInfo.
+	 * 
+	 * @param key
+	 * @param t
+	 * @return The StateValue we found. At this step it *should* have been found.
+	 */
+	protected StateValue doSingularQuery(int key, TimeValue t) {
+		StateHistoryTreeNode currentNode = treeIO.readNode(rootNode);
+		
+		while ( currentNode.probeNode(key, t) == null ) {
+			currentNode = selectNextChild(currentNode, t);
+		}
+		return currentNode.probeNode(key, t);
+	}
+	
+	
+	private StateHistoryTreeNode selectNextChild(StateHistoryTreeNode currentNode, TimeValue t) {
+		assert ( currentNode.getNbChildren() > 0 );
+		int potentialNextSeqNb = currentNode.getSequenceNumber();
+		
+		for ( int i = 0; i < currentNode.getNbChildren(); i++ ) {
+			if ( t.compareTo(currentNode.getChildStart(i), false) >= 0 ) {
+				potentialNextSeqNb = currentNode.getChild(i);
+			} else {
+				break;
+			}
+		}
+		/* Once we exit this loop, we should have found a children to follow.
+		 * If we didn't, there's a problem. */
+		assert ( potentialNextSeqNb != currentNode.getSequenceNumber() );
+		return treeIO.readNode(potentialNextSeqNb);
+	}
 	
 	/**
 	 * Helper function to get the size of the "tree header" in the tree-file
