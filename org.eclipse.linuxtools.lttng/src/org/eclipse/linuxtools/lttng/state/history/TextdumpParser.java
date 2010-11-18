@@ -5,6 +5,7 @@
 package org.eclipse.linuxtools.lttng.state.history;
 
 import java.io.*;
+import java.util.Vector;
 
 import org.eclipse.linuxtools.lttng.event.LttngTimestamp;
 
@@ -154,14 +155,16 @@ class TextdumpParser {
 		System.out.println("Process #" + new_pid + " now scheduled on CPU " + cpu);
 		
 		/* Update "what is being run on which CPU" */
-		stateInterface.modifyAttribute("System/CPUs/" + cpu + "/Scheduled_process", new_pid, timestamp);
+		stateInterface.modifyAttribute(convert("System/CPUs/" + cpu + "/Scheduled_process"), new_pid, timestamp);
 		
 		/* Update the status of the process that was scheduled and the one that was thrown out. */
-		stateInterface.modifyAttribute("System/Processes/" + new_pid + "Current_state", "running", timestamp);
-		stateInterface.modifyAttribute("System/Processes/" + old_pid + "Current_state", prevState, timestamp);
+		stateInterface.modifyAttribute(convert("System/Processes/" + new_pid + "Current_state"), "running", timestamp);
+		stateInterface.modifyAttribute(convert("System/Processes/" + old_pid + "Current_state"), prevState, timestamp);
 	}
 	
-	
+	private Vector<String> convert(String string) {
+		return StateHistoryInterface.convertStringToVector(string);
+	}
 }
 
 

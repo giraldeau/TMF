@@ -308,7 +308,7 @@ class StateHistoryTreeNode {
 	 * @param t
 	 * @return The Interval containing the information we want, or null if it wasn't found
 	 */
-	protected StateHistoryTreeInterval probeNode(int key, TimeValue t) {
+	protected StateHistoryTreeInterval getRelevantInterval(int key, TimeValue t) {
 		for ( int i = 0; i < intervalCount; i++ ) {
 			if ( intervals.get(i).getKey() == key ) {
 				if ( t.intersects(intervals.get(i)) ) {

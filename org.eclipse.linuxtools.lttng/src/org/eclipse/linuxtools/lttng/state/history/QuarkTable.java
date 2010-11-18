@@ -9,10 +9,10 @@ import java.util.Vector;
 
 /**
  * A simple implementation of a Quark table, which consists of a 
- * Hashtable<String, Integer> and a Vector<String>.
+ * Hashtable<Key, Integer> and a Vector<Key>. "Key" being a generic object.
  * 
- * This allows stored Strings to have an integer representation (faster compares, etc.),
- * while being able to do both conversions String <-> Int  in constant time.
+ * This allows stored objects to have an integer representation (faster compares, etc.),
+ * while being able to do both conversions Object <-> Int  in constant time.
  * 
  * @author alexmont
  *

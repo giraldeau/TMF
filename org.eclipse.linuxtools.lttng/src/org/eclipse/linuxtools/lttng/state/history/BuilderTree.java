@@ -99,7 +99,7 @@ class BuilderTree {
 	 * @param t The requested timestamp
 	 */
 	protected void doQuery(Vector<StateValue> stateInfo, TimeValue t) {
-		assert( this.isActive );
+		if ( !this.isActive ) {	return; }
 		assert( stateInfo.size() == ongoingStateInfo.size() );
 		
 		for ( int i=0; i < ongoingStateInfo.size(); i++ ) {
@@ -128,6 +128,7 @@ class BuilderTree {
 	 * @return The StateValue associated to that attribute/timestamp
 	 */
 	protected StateValue doSingularQuery(int index, TimeValue t) {
+		assert ( index < ongoingStateInfo.size() );
 		if ( this.isActive ) {
 			if ( t.compareTo( ongoingStateStartTimes.get(index), false) > 0 ) {
 				/* The information we want is currently located in this Builder Tree */
@@ -137,6 +138,39 @@ class BuilderTree {
 		/* else */
 		/* We don't have the information at hand, we'll need to go look in the SHT */
 		return stateHistTree.doSingularQuery(index, t);
+	}
+	
+	/**
+	 * getNext/getPrevious state change.
+	 * For any attribute/timestamp pair, return the timestamp of the following or previous
+	 * change of state.
+	 * 
+	 * @param index The attribute in integer form
+	 * @param t Any timestamp where the attribute is in the state we want to know the start/end
+	 * @return The TimeValue of the state change
+	 */
+	protected TimeValue getNextStateChange(int index, TimeValue t) {
+		assert ( index < ongoingStateInfo.size() );
+		if ( this.isActive ) {
+			if ( t.compareTo( ongoingStateStartTimes.get(index), false) > 0 ) {
+				/* The "live" trace does not contain any information about the next-state-change yet */
+				return null;
+			}
+		}
+		/* Check in the SHT, which is where the data should be anyway in this case */
+		return stateHistTree.getNextStateChange(index, t);
+	}
+	
+	protected TimeValue getPrevStateChange(int index, TimeValue t) {
+		assert ( index < ongoingStateInfo.size() );
+		if ( this.isActive ) {
+			if ( t.compareTo( ongoingStateStartTimes.get(index), false) > 0 ) {
+				/* The information we are looking for is located right here in the Builder Tree */
+				return ongoingStateStartTimes.get(index);
+			}
+		}
+		/* If we couldn't find the data in the Builder Tree, it *may* be in the SHT */
+		return stateHistTree.getPrevStateChange(index, t);
 	}
 	
 	/**

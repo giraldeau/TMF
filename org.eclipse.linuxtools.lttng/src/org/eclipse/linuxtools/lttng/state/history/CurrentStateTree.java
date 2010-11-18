@@ -120,6 +120,21 @@ class CurrentStateTree {
 	}
 	
 	/**
+	 * Get next/prev State change methods.
+	 * Simply calls the method of the same name in Builder Tree, after converting
+	 * the Vector<String> to integer form.
+	 * 
+	 */
+	protected TimeValue getNextStateChange(Vector<String> attribute, TimeValue t) {
+		return builderTree.getNextStateChange( indexTable.getMatchingInt(attribute), t);
+	}
+	
+	protected TimeValue getPrevStateChange(Vector<String> attribute, TimeValue t) {
+		return builderTree.getPrevStateChange( indexTable.getMatchingInt(attribute), t);
+	}
+	
+	
+	/**
 	 * Internal method to convert from a Vector-type attribute to the Path/sub-path element
 	 * 
 	 * @param attribute

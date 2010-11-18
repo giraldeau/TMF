@@ -402,28 +402,36 @@ class StateHistoryTree {
 	 * @return The StateValue we found. At this step it *should* have been found.
 	 */
 	protected StateValue doSingularQuery(int key, TimeValue t) {
-		return getRelevantNode(key, t).probeNode(key, t);
+		return getRelevantInterval(key, t).getValue();
 	}
 	
 	protected TimeValue getNextStateChange(int key, TimeValue t) {
-		
+		return getRelevantInterval(key, t).getEnd();
+	}
+	
+	protected TimeValue getPrevStateChange(int key, TimeValue t) {
+		return getRelevantInterval(key, t).getStart();
 	}
 	
 	/**
-	 * Inner method to find the node containing the requested key/timestamp pair,
-	 * wherever it is in the tree.
+	 * Inner method to find the interval in the tree containing the
+	 * requested key/timestamp pair, wherever in which node it is.
 	 * 
 	 * @param key
 	 * @param t
 	 * @return The node containing the information we want
 	 */
-	private StateHistoryTreeNode getRelevantNode(int key, TimeValue t) {
+	private StateHistoryTreeInterval getRelevantInterval(int key, TimeValue t) {
 		StateHistoryTreeNode currentNode = treeIO.readNode(rootNode);
+		StateHistoryTreeInterval interval = currentNode.getRelevantInterval(key, t);
 		
-		while ( currentNode.probeNode(key, t) == null ) {
+		while ( interval == null && currentNode.getNbChildren() > 0 ) {
 			currentNode = selectNextChild(currentNode, t);
+			interval = currentNode.getRelevantInterval(key, t);
 		}
-		return currentNode;
+		/* If we went through the whole branch and we didn't find the info,
+		 * 'interval' will still be null */
+		return interval;
 	}
 	
 	/**

@@ -148,7 +148,7 @@ public class StateHistoryInterface {
 	}
 	
 	/**
-	 * Once we have set up the "current state" using the above methods, we can now run
+	 * Once we have set up the "current state" using the above method, we can now run
 	 * queries to get individual attributes.
 	 * This method returns a value that was given as type 'int' for the given pathName.
 	 * 
@@ -204,12 +204,15 @@ public class StateHistoryInterface {
 	 * 			Returns null if there is no next or no previous state change.
 	 */
 	public LttngTimestamp getNextStateChange(Vector<String> attribute, LttngTimestamp t) {
-		
+		assert ( treeLoaded );
+		return (LttngTimestamp) innerCST.getNextStateChange(attribute,  new TimeValue(t));
 	}
 	
-	public LttngTimestamp getPreviousStateChange(Vector<String> attribute, LttngTimestamp t) {
-		
+	public LttngTimestamp getPrevStateChange(Vector<String> attribute, LttngTimestamp t) {
+		assert ( treeLoaded );
+		return (LttngTimestamp) innerCST.getPrevStateChange(attribute,  new TimeValue(t));
 	}
+	
 	
 	/**
 	 * In case we want to support supplying path as slash-delimited Strings,
