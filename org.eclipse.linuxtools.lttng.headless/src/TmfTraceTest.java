@@ -46,7 +46,9 @@ public class TmfTraceTest extends TmfEventRequest<LttngEvent> {
     public static long t1 = 0;
     public static long t2 = 0;
     
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InterruptedException {
+		
+		Thread.sleep(10000);
 		
 		try {
 			// OUr experiment will contains ONE trace

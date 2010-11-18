@@ -23,7 +23,7 @@ public class SampleSeries {
 	
 	private double[] buildArray(ArrayList<Double> a) {
 		// this function sucks because we can't convert
-		// Double[] to double[] 
+		// Double[] to double[]
 		double[] res = new double[a.size()];
 		int i = 0;
 		for (Double d: a) {
