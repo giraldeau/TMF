@@ -402,15 +402,38 @@ class StateHistoryTree {
 	 * @return The StateValue we found. At this step it *should* have been found.
 	 */
 	protected StateValue doSingularQuery(int key, TimeValue t) {
+		return getRelevantNode(key, t).probeNode(key, t);
+	}
+	
+	protected TimeValue getNextStateChange(int key, TimeValue t) {
+		
+	}
+	
+	/**
+	 * Inner method to find the node containing the requested key/timestamp pair,
+	 * wherever it is in the tree.
+	 * 
+	 * @param key
+	 * @param t
+	 * @return The node containing the information we want
+	 */
+	private StateHistoryTreeNode getRelevantNode(int key, TimeValue t) {
 		StateHistoryTreeNode currentNode = treeIO.readNode(rootNode);
 		
 		while ( currentNode.probeNode(key, t) == null ) {
 			currentNode = selectNextChild(currentNode, t);
 		}
-		return currentNode.probeNode(key, t);
+		return currentNode;
 	}
 	
-	
+	/**
+	 * Inner method to select the next child of the current node intersecting the given timestamp.
+	 * Useful for moving down the tree following one branch.
+	 * 
+	 * @param currentNode
+	 * @param t
+	 * @return The child node intersecting t
+	 */
 	private StateHistoryTreeNode selectNextChild(StateHistoryTreeNode currentNode, TimeValue t) {
 		assert ( currentNode.getNbChildren() > 0 );
 		int potentialNextSeqNb = currentNode.getSequenceNumber();

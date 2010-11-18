@@ -201,6 +201,7 @@ public class StateHistoryInterface {
 	 * @param attribute The attribute we want to know the state change
 	 * @param t *Any* timestamp we know the given attribute will be in the state we want to compare
 	 * @return The timestamp at which the attribute will stop (or started) being in that state
+	 * 			Returns null if there is no next or no previous state change.
 	 */
 	public LttngTimestamp getNextStateChange(Vector<String> attribute, LttngTimestamp t) {
 		

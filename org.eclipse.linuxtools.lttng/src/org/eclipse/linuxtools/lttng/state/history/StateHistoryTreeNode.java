@@ -301,18 +301,18 @@ class StateHistoryTreeNode {
 	}
 	
 	/**
-	 * Get a single StateValue from the information in this node
+	 * Get a single Interval from the information in this node
 	 * If the key/timestamp pair cannot be found, we return null.
 	 * 
 	 * @param key
 	 * @param t
-	 * @return The relevant StateValue if it was found here, or null if it wasn't
+	 * @return The Interval containing the information we want, or null if it wasn't found
 	 */
-	protected StateValue probeNode(int key, TimeValue t) {
+	protected StateHistoryTreeInterval probeNode(int key, TimeValue t) {
 		for ( int i = 0; i < intervalCount; i++ ) {
 			if ( intervals.get(i).getKey() == key ) {
 				if ( t.intersects(intervals.get(i)) ) {
-					return intervals.get(i).getValue();
+					return intervals.get(i);
 				}
 			}
 		}
