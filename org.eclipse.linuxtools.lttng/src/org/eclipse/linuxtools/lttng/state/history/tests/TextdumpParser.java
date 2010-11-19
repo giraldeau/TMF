@@ -2,12 +2,14 @@
  * 
  */
 
-package org.eclipse.linuxtools.lttng.state.history;
+package org.eclipse.linuxtools.lttng.state.history.tests;
 
 import java.io.*;
 import java.util.Vector;
 
 import org.eclipse.linuxtools.lttng.event.LttngTimestamp;
+import org.eclipse.linuxtools.lttng.state.history.QuarkTable;
+import org.eclipse.linuxtools.lttng.state.history.StateHistoryInterface;
 
 /**
  * Parser for textdump files, whose are coming from LTTV's textDump module
