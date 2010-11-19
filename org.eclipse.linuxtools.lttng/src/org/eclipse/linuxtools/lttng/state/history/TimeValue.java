@@ -54,4 +54,12 @@ class TimeValue extends LttngTimestamp {
 		return false;
 	}
 	
+	/**
+	 * Add one nanosecond (smallest possible step) to the fValue.
+	 * Used when generating intervals to make sure there is no clash.
+	 */
+	protected void increment() {
+		this.fValue++;
+	}
+	
 }

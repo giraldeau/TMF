@@ -81,6 +81,7 @@ class BuilderTree {
 			}
 			
 			/* Finally, we write the new information in the Builder Tree */
+			eventTime.increment();
 			ongoingStateInfo.set(index, value);
 			ongoingStateStartTimes.set(index, eventTime);
 		}
