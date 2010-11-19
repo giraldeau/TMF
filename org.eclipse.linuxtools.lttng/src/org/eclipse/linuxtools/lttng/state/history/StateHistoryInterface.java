@@ -24,6 +24,10 @@ public class StateHistoryInterface {
 	private boolean treeLoaded;
 	
 	/**
+	 * @name Tree creation methods
+	 */
+	
+	/**
 	 * Constructor
 	 */
 	public StateHistoryInterface() {
@@ -48,6 +52,9 @@ public class StateHistoryInterface {
 		return;
 	}
 	
+	/**
+	 * Same as previous method, but using default values for blockSize, maxChildren and cacheSize
+	 */
 	public void createNewStateHistoryFile(String fileName, LttngTimestamp treeStart) {
 		assert ( treeLoaded == false );
 		innerCST =  new CurrentStateTree(fileName, new TimeValue(treeStart), 64*1024, 10, 100);
@@ -76,7 +83,7 @@ public class StateHistoryInterface {
 	
 	
 	/**
-	 * Methods to register modifications to the Current State
+	 * @name Methods to register modifications to the Current State
 	 */
 	
 	/**
@@ -93,6 +100,9 @@ public class StateHistoryInterface {
 		return;
 	}
 	
+	/**
+	 * Same as previous, but using for values of type String
+	 */
 	public void modifyAttribute(Vector<String> attribute, String valueStr, LttngTimestamp t) {
 		stateChange(attribute, new StateValue(valueStr), new TimeValue(t));
 		return;
@@ -131,7 +141,7 @@ public class StateHistoryInterface {
 	
 	
 	/**
-	 * Query methods
+	 * @name Query methods
 	 */
 	
 	/**
@@ -160,6 +170,9 @@ public class StateHistoryInterface {
 		return innerCST.getStateValue(attribute).getValueInt();
 	}
 	
+	/**
+	 * Same as previous, but for attributes where the value previously stored is of type String
+	 */
 	public String getStateValueStr(Vector<String> attribute) {
 		assert ( treeLoaded );
 		return innerCST.getStateValue(attribute).getValueStr();
@@ -184,6 +197,9 @@ public class StateHistoryInterface {
 		return innerCST.getSingleStateValue( attribute, new TimeValue(t) ).getValueInt();
 	}
 	
+	/**
+	 * Same as previous, but for a return value of type String
+	 */
 	public String getSingleStateValueStr(Vector<String> attribute, LttngTimestamp t) {
 		assert ( treeLoaded );
 		return innerCST.getSingleStateValue( attribute, new TimeValue(t) ).getValueStr();
@@ -208,11 +224,18 @@ public class StateHistoryInterface {
 		return (LttngTimestamp) innerCST.getNextStateChange(attribute,  new TimeValue(t));
 	}
 	
+	/**
+	 * Same as getNextStateChange, but it returns the previous change of state instead
+	 */
 	public LttngTimestamp getPrevStateChange(Vector<String> attribute, LttngTimestamp t) {
 		assert ( treeLoaded );
 		return (LttngTimestamp) innerCST.getPrevStateChange(attribute,  new TimeValue(t));
 	}
 	
+	
+	/**
+	 * @name Other methods
+	 */
 	
 	/**
 	 * In case we want to support supplying path as slash-delimited Strings,
@@ -222,7 +245,7 @@ public class StateHistoryInterface {
 	 * @param slashSeparatedString The slash-separated string. duh
 	 * @return A Vector<String> containing the partial strings, with the slashes stripped out
 	 */
-	protected static Vector<String> convertStringToVector(String slashSeparatedString) {
+	public static Vector<String> convertStringToVector(String slashSeparatedString) {
 		String components[];
 		Vector<String> componentVector = new Vector<String>();
 		
