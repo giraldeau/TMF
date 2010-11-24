@@ -129,6 +129,7 @@ class TextdumpParser {
 	 */
 	private void registerKnownEvents() {
 		knownEventTypes.addEntry("sched_schedule");
+		
 	}
 	
 	private void schedulingEvent(LttngTimestamp timestamp, int cpu, int new_pid, String extraInfo) {
