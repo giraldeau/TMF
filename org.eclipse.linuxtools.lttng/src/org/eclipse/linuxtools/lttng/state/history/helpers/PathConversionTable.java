@@ -1,10 +1,12 @@
 
-package org.eclipse.linuxtools.lttng.state.history;
+package org.eclipse.linuxtools.lttng.state.history.helpers;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Hashtable;
 import java.util.Vector;
+
+import org.eclipse.linuxtools.lttng.state.history.StateHistoryInterface;
 
 
 /**
@@ -17,7 +19,7 @@ import java.util.Vector;
  * @author alexmont
  *
  */
-class PathConversionTable extends QuarkTable<Vector<String>> {
+public class PathConversionTable extends QuarkTable<Vector<String>> {
 	
 	/*
 	 * The attributes inherited from QuarkTable are:

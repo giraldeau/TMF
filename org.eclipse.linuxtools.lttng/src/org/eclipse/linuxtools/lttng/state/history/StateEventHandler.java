@@ -5,6 +5,7 @@ import java.util.*;
 import org.eclipse.linuxtools.lttng.event.LttngEvent;
 import org.eclipse.linuxtools.lttng.event.LttngTimestamp;
 import org.eclipse.linuxtools.lttng.state.StateStrings;
+import org.eclipse.linuxtools.lttng.state.history.helpers.VectorConvert;
 import org.eclipse.linuxtools.tmf.event.TmfEvent;
 import org.eclipse.linuxtools.tmf.event.TmfTimeRange;
 import org.eclipse.linuxtools.tmf.request.TmfEventRequest;
@@ -16,6 +17,7 @@ public class StateEventHandler extends TmfEventRequest<LttngEvent> {
 	private ArrayList<Integer> nbEventsPerCPU;
 	private HashMap<String, Integer> markerMap;
 	private StateStrings knownStates;
+	private VectorConvert<String> convert;
     private StateHistoryInterface stateHistory;
 	
 	public StateEventHandler() {
@@ -31,6 +33,7 @@ public class StateEventHandler extends TmfEventRequest<LttngEvent> {
         nbEventsPerCPU = new ArrayList<Integer>();
         markerMap = new HashMap<String, Integer>();
         knownStates = StateStrings.getInstance();
+        convert = new VectorConvert<String>();
         
         stateHistory = new StateHistoryInterface();
         stateHistory.createNewStateHistoryFile( "/home/alexandre/tmp/bidon", new LttngTimestamp( range.getStartTime() ) );
@@ -123,11 +126,19 @@ public class StateEventHandler extends TmfEventRequest<LttngEvent> {
 			case LTT_EVENT_SCHED_SCHEDULE:
 				/* prev_pid:5468,next_pid:111,prev_state:0 */
 				/* Yes, 0 is next_pid and 1 is prev_pid , go figure */
-				int next_pid = (Integer) event.getContent().getField(0).getValue();
-				int prev_pid = (Integer) event.getContent().getField(1).getValue();
-				int prev_state = (Integer) event.getContent().getField(2).getValue();
+				String next_pid = (String) event.getContent().getField(0).getValue();
+				String prev_pid = (String) event.getContent().getField(1).getValue();
+				Integer prev_state = (Integer) event.getContent().getField(2).getValue();
 				
-				//stateHistory.modifyAttribute(attribute, valueInt, event.getTimestamp())
+				/* Set the status of the new scheduled process */
+				stateHistory.modifyAttribute(convert.parse("Hostname", "Processes", next_pid, "Status"),
+													StateStrings.ProcessStatus.LTTV_STATE_RUN.ordinal(),
+													event.getTimestamp());
+				
+				/* Set the status of the process that got scheduled out */
+				stateHistory.modifyAttribute(convert.parse("Hostname", "Processes", prev_pid, "Status"),
+													prev_state,
+													event.getTimestamp());
 				break;
 			
 			case LTT_EVENT_PROCESS_FORK:

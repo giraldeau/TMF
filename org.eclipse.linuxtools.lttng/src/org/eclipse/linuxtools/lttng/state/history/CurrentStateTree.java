@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Vector;
 
+import org.eclipse.linuxtools.lttng.state.history.helpers.PathConversionTable;
+
 /**
  * 
  * Here in TMF, the Strings will contain the "path" in the state system's /proc-like tree, for example:

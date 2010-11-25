@@ -8,8 +8,8 @@ import java.io.*;
 import java.util.Vector;
 
 import org.eclipse.linuxtools.lttng.event.LttngTimestamp;
-import org.eclipse.linuxtools.lttng.state.history.QuarkTable;
 import org.eclipse.linuxtools.lttng.state.history.StateHistoryInterface;
+import org.eclipse.linuxtools.lttng.state.history.helpers.QuarkTable;
 
 /**
  * Parser for textdump files, whose are coming from LTTV's textDump module

@@ -7,6 +7,8 @@ package org.eclipse.linuxtools.lttng.state.history;
 import java.io.*;
 import java.util.Vector;
 
+import org.eclipse.linuxtools.lttng.state.history.helpers.PathConversionTable;
+
 /**
  * Meta-container for the State History Tree. This structure contains all the
  * high-level data relevant to the tree.

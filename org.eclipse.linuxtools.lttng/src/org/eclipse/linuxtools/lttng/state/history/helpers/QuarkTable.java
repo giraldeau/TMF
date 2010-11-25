@@ -2,7 +2,7 @@
  * 
  */
 
-package org.eclipse.linuxtools.lttng.state.history;
+package org.eclipse.linuxtools.lttng.state.history.helpers;
 
 import java.util.Hashtable;
 import java.util.Vector;

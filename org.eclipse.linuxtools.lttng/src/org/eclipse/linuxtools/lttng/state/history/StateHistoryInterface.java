@@ -6,7 +6,7 @@ package org.eclipse.linuxtools.lttng.state.history;
 
 import java.io.IOException;
 import java.util.Vector;
-import org.eclipse.linuxtools.lttng.event.LttngTimestamp;
+import org.eclipse.linuxtools.tmf.event.TmfTimestamp;
 
 /**
  * This is the highest-level container of the whole State History system.
@@ -44,7 +44,7 @@ public class StateHistoryInterface {
 	 * @param maxChildren Max. number of children allowed per node
 	 * @param cacheSize Size of the cache (in number of nodes, not in bytes!)
 	 */
-	public void createNewStateHistoryFile(String fileName, LttngTimestamp treeStart,
+	public void createNewStateHistoryFile(String fileName, TmfTimestamp treeStart,
 											int blockSize, int maxChildren, int cacheSize) {
 		assert ( treeLoaded == false );
 		innerCST = new CurrentStateTree(fileName, new TimeValue(treeStart), blockSize, maxChildren, cacheSize);
@@ -55,7 +55,7 @@ public class StateHistoryInterface {
 	/**
 	 * Same as previous method, but using default values for blockSize, maxChildren and cacheSize
 	 */
-	public void createNewStateHistoryFile(String fileName, LttngTimestamp treeStart) {
+	public void createNewStateHistoryFile(String fileName, TmfTimestamp treeStart) {
 		assert ( treeLoaded == false );
 		innerCST =  new CurrentStateTree(fileName, new TimeValue(treeStart), 64*1024, 10, 100);
 		treeLoaded = true;
@@ -95,7 +95,7 @@ public class StateHistoryInterface {
 	 * @param valueInt (or valueStr) The value this entry needs to have (either String or int, ex.: "syscall" or '1234')
 	 * @param t The timestamp associated with this state change
 	 */
-	public void modifyAttribute(Vector<String> attribute, int valueInt, LttngTimestamp t) {
+	public void modifyAttribute(Vector<String> attribute, int valueInt, TmfTimestamp t) {
 		stateChange(attribute, new StateValue(valueInt), new TimeValue(t));
 		return;
 	}
@@ -103,7 +103,7 @@ public class StateHistoryInterface {
 	/**
 	 * Same as previous, but using for values of type String
 	 */
-	public void modifyAttribute(Vector<String> attribute, String valueStr, LttngTimestamp t) {
+	public void modifyAttribute(Vector<String> attribute, String valueStr, TmfTimestamp t) {
 		stateChange(attribute, new StateValue(valueStr), new TimeValue(t));
 		return;
 	}
@@ -122,7 +122,7 @@ public class StateHistoryInterface {
 	 * Similar to the above methods, except we will also "nullify" all the sub-contents of
 	 * the requested path.
 	 */
-	public void removeAttribute(Vector<String> attribute, LttngTimestamp t) {
+	public void removeAttribute(Vector<String> attribute, TmfTimestamp t) {
 		assert ( treeLoaded );
 		innerCST.removeAttribute(attribute, new TimeValue(t));
 	}
@@ -151,7 +151,7 @@ public class StateHistoryInterface {
 	 * 
 	 * @param t We will recreate the state information to what it was at time t.
 	 */
-	public void loadStateAtTime(LttngTimestamp t) {
+	public void loadStateAtTime(TmfTimestamp t) {
 		assert ( treeLoaded );
 		innerCST.setStateAtTime( new TimeValue(t) );
 		return;
@@ -192,7 +192,7 @@ public class StateHistoryInterface {
 	 * @param t The timestamp at which we want the state
 	 * @return The integer State Value we previously inserted at this point/time.
 	 */
-	public int getSingleStateValueInt(Vector<String> attribute, LttngTimestamp t) {
+	public int getSingleStateValueInt(Vector<String> attribute, TmfTimestamp t) {
 		assert ( treeLoaded );
 		return innerCST.getSingleStateValue( attribute, new TimeValue(t) ).getValueInt();
 	}
@@ -200,7 +200,7 @@ public class StateHistoryInterface {
 	/**
 	 * Same as previous, but for a return value of type String
 	 */
-	public String getSingleStateValueStr(Vector<String> attribute, LttngTimestamp t) {
+	public String getSingleStateValueStr(Vector<String> attribute, TmfTimestamp t) {
 		assert ( treeLoaded );
 		return innerCST.getSingleStateValue( attribute, new TimeValue(t) ).getValueStr();
 	}
@@ -219,17 +219,17 @@ public class StateHistoryInterface {
 	 * @return The timestamp at which the attribute will stop (or started) being in that state
 	 * 			Returns null if there is no next or no previous state change.
 	 */
-	public LttngTimestamp getNextStateChange(Vector<String> attribute, LttngTimestamp t) {
+	public TmfTimestamp getNextStateChange(Vector<String> attribute, TmfTimestamp t) {
 		assert ( treeLoaded );
-		return (LttngTimestamp) innerCST.getNextStateChange(attribute,  new TimeValue(t));
+		return (TmfTimestamp) innerCST.getNextStateChange(attribute,  new TimeValue(t));
 	}
 	
 	/**
 	 * Same as getNextStateChange, but it returns the previous change of state instead
 	 */
-	public LttngTimestamp getPrevStateChange(Vector<String> attribute, LttngTimestamp t) {
+	public TmfTimestamp getPrevStateChange(Vector<String> attribute, TmfTimestamp t) {
 		assert ( treeLoaded );
-		return (LttngTimestamp) innerCST.getPrevStateChange(attribute,  new TimeValue(t));
+		return (TmfTimestamp) innerCST.getPrevStateChange(attribute,  new TimeValue(t));
 	}
 	
 	
