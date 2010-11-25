@@ -34,7 +34,8 @@ public class TestAPI {
 
 		StateEventHandler handler = new StateEventHandler(LttngEvent.class, tmpRange, Integer.MAX_VALUE);
 		fExperiment.sendRequest(handler);
-		// FIXME: this is ugly hack because otherwise the sendRequest doesn't block
+		// FIXME: this is a ugly hack because otherwise the sendRequest doesn't block
+		//fExperiment.wait();
 		while(!handler.isDone()) {
 			Thread.sleep(100);
 		}

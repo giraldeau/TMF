@@ -63,6 +63,14 @@ public class QuarkTable<K> {
 		reverseConversionTable.addElement(entry);
 		
 	}
+	
+	/**
+	 * Remove all the entries in the table
+	 */
+	public void clear() {
+		conversionTable.clear();
+		reverseConversionTable.clear();
+	}
 }
 
 

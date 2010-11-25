@@ -4,19 +4,19 @@ import java.util.*;
 
 import org.eclipse.linuxtools.lttng.event.LttngEvent;
 import org.eclipse.linuxtools.lttng.event.LttngTimestamp;
-import org.eclipse.linuxtools.lttng.state.model.LttngTraceState;
+import org.eclipse.linuxtools.lttng.state.StateStrings;
 import org.eclipse.linuxtools.tmf.event.TmfEvent;
 import org.eclipse.linuxtools.tmf.event.TmfTimeRange;
 import org.eclipse.linuxtools.tmf.request.TmfEventRequest;
 
 public class StateEventHandler extends TmfEventRequest<LttngEvent> {
 
-	private int nbEvent;
+	private int nbEvents;
 	private boolean done;
 	private ArrayList<Integer> nbEventsPerCPU;
 	private HashMap<String, Integer> markerMap;
-	
-    private StateHistoryInterface history;
+	private StateStrings knownStates;
+    private StateHistoryInterface stateHistory;
 	
 	public StateEventHandler() {
 		this(null, null, 0);
@@ -26,104 +26,241 @@ public class StateEventHandler extends TmfEventRequest<LttngEvent> {
 	public StateEventHandler(Class<? extends TmfEvent> dataType, TmfTimeRange range,
 							int nbRequested) {
         super((Class<LttngEvent>)dataType, range, nbRequested, 1);
-        nbEvent = 0;
+        nbEvents = 0;
         done = false;
         nbEventsPerCPU = new ArrayList<Integer>();
         markerMap = new HashMap<String, Integer>();
-        history = new StateHistoryInterface();
-        history.createNewStateHistoryFile("/home/alexandre/tmp/bidon", new LttngTimestamp());
+        knownStates = StateStrings.getInstance();
+        
+        stateHistory = new StateHistoryInterface();
+        stateHistory.createNewStateHistoryFile( "/home/alexandre/tmp/bidon", new LttngTimestamp( range.getStartTime() ) );
     }
     
 	@Override
-    public void handleData(LttngEvent event) {
-		super.handleData(event);
-        if ( (event != null)) {
-            ((LttngEvent) event).getContent().getFields();
-            
-            // *** Uncomment the following to print the parsed content
-            // Warning : this is VERY intensive
-			//
-            //System.out.println((LttngEvent)evt[0]);
-            //System.out.println(((LttngEvent)evt[0]).getContent());
-            int cpu =  (int)event.getCpuId();
-            while ( cpu >= nbEventsPerCPU.size() ) {
-            	nbEventsPerCPU.add(0);
-            }
-            Integer i = nbEventsPerCPU.get(cpu) + 1;
-            nbEventsPerCPU.set(cpu, i);
-            nbEvent++;
-            
-            /* Add the marker name to the map if needed */
-            if ( !markerMap.containsKey(event.getMarkerName()) ) {
-            	markerMap.put(event.getMarkerName(), 0);
-            }
-            Integer m = markerMap.get(event.getMarkerName()) + 1;
-            markerMap.put(event.getMarkerName(), m);
-            /*
-            if (event.getMarkerName().compareTo("process_state")==0) {
-            	System.out.println(event.getContent());
-            }*/
-            
-            /* Feed event to history system */
-            if (event.getMarkerName().compareTo("syscall_entry")==0) {
-            	System.out.println(event.getContent());
-            } else if (event.getMarkerName().compareTo("syscall_exit")==0) {
-            	System.out.println(event.getContent());
-            }
-        }
+	public void handleData(LttngEvent event) {
+		super.handleData(event); /* Simply checks that event != null */
+		
+		int i, m, cpu;
+		
+		/* Uncomment the following to print the parsed content
+		 * Warning : this is VERY intensive */
+		//System.out.println(event);
+		//System.out.println(event.getContent());
+		
+		/* Statistics: Events per CPU */
+		cpu =  (int)event.getCpuId();
+		while ( cpu >= nbEventsPerCPU.size() ) {
+			nbEventsPerCPU.add(0);
+		}
+		i = nbEventsPerCPU.get(cpu) + 1;
+		nbEventsPerCPU.set(cpu, i);
+		nbEvents++;
+
+		/* Statistics: Nb. of events per marker name */
+		if ( !markerMap.containsKey(event.getMarkerName()) ) {
+			markerMap.put(event.getMarkerName(), 0);
+		}
+		m = markerMap.get(event.getMarkerName()) + 1;
+		markerMap.put(event.getMarkerName(), m);
+		
+		
+		/* Feed event to the history system if it's known to cause a state transition */
+		if ( knownStates.getStateTransEventMap().containsKey(event.getMarkerName()) ) {
+			switch ( knownStates.getStateTransEventMap().get(event.getMarkerName()) ) {
+			
+			case LTT_EVENT_SYSCALL_ENTRY:
+				//
+				break;
+				
+			case LTT_EVENT_SYSCALL_EXIT:
+				//
+				break;
+			
+			case LTT_EVENT_TRAP_ENTRY:
+				//
+				break;
+			
+			case LTT_EVENT_TRAP_EXIT:
+				//
+				break;
+			
+			case LTT_EVENT_PAGE_FAULT_ENTRY:
+				//
+				break;
+			
+			case LTT_EVENT_PAGE_FAULT_EXIT:
+				//
+				break;
+			
+			case LTT_EVENT_PAGE_FAULT_NOSEM_ENTRY:
+				//
+				break;
+			
+			case LTT_EVENT_PAGE_FAULT_NOSEM_EXIT:
+				//
+				break;
+			
+			case LTT_EVENT_IRQ_ENTRY:
+				//
+				break;
+			
+			case LTT_EVENT_IRQ_EXIT:
+				//
+				break;
+			
+			case LTT_EVENT_SOFT_IRQ_RAISE:
+				//
+				break;
+			
+			case LTT_EVENT_SOFT_IRQ_ENTRY:
+				//
+				break;
+				
+			case LTT_EVENT_SOFT_IRQ_EXIT:
+				//
+				break;
+			
+			case LTT_EVENT_SCHED_SCHEDULE:
+				/* prev_pid:5468,next_pid:111,prev_state:0 */
+				/* Yes, 0 is next_pid and 1 is prev_pid , go figure */
+				int next_pid = (Integer) event.getContent().getField(0).getValue();
+				int prev_pid = (Integer) event.getContent().getField(1).getValue();
+				int prev_state = (Integer) event.getContent().getField(2).getValue();
+				
+				//stateHistory.modifyAttribute(attribute, valueInt, event.getTimestamp())
+				break;
+			
+			case LTT_EVENT_PROCESS_FORK:
+				//
+				break;
+			
+			case LTT_EVENT_KTHREAD_CREATE:
+				//
+				break;
+			
+			case LTT_EVENT_PROCESS_EXIT:
+				//
+				break;
+			
+			case LTT_EVENT_PROCESS_FREE:
+				//
+				break;
+			
+			case LTT_EVENT_EXEC:
+				//
+				break;
+			
+			case LTT_EVENT_THREAD_BRAND:
+				//
+				break;
+			
+			case LTT_EVENT_PROCESS_STATE:
+				//
+				break;
+			
+			case LTT_EVENT_STATEDUMP_END:
+				//
+				break;
+			
+			case LTT_EVENT_LIST_INTERRUPT:
+				//
+				break;
+			
+			case LTT_EVENT_REQUEST_ISSUE:
+				//
+				break;
+			
+			case LTT_EVENT_REQUEST_COMPLETE:
+				//
+				break;
+			
+			case LTT_EVENT_FUNCTION_ENTRY:
+				//
+				break;
+			
+			case LTT_EVENT_FUNCTION_EXIT:
+				//
+				break;
+			
+			case LTT_EVENT_SYS_CALL_TABLE:
+				//
+				break;
+			
+			case LTT_EVENT_SOFTIRQ_VEC:
+				//
+				break;
+			
+			case LTT_EVENT_KPROBE_TABLE:
+				//
+				break;
+				
+			default:
+				/* Unknown event type, no state change */
+				break;
+			}
+		}
     }
 	
-    @Override
-    public void handleCompleted() {
+    @SuppressWarnings("unchecked")
+	@Override
+	public void handleCompleted() {
     	markerMap = (HashMap<String, Integer>) sortByValue(markerMap);
-    	done=true;
-    }
-    
-    @Override
-    public void handleSuccess() {
-    }
-    
-    @Override
-    public void handleFailure() {
-    }
-    
-    @Override
-    public void handleCancel() {
-    }
-    
-    @SuppressWarnings("rawtypes")
-    public Map sortByValue(Map map) {
-        List list = new LinkedList(map.entrySet());
-        Collections.sort(list, new Comparator() {
-             public int compare(Object o2, Object o1) {
-                  return ((Comparable) ((Map.Entry) (o1)).getValue())
-                 .compareTo(((Map.Entry) (o2)).getValue());
-             }
-        });
-        Map result = new LinkedHashMap();
+    	done = true;
+	}
+
+	@Override
+	public void handleSuccess() {
+	}
+
+	@Override
+	public void handleFailure() {
+	}
+
+	@Override
+	public void handleCancel() {
+	}
+	
+	/**
+	 * Helper function to sort a Map
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public Map sortByValue(Map map) {
+		List list = new LinkedList(map.entrySet());
+		Collections.sort(list, new Comparator() {
+		     public int compare(Object o2, Object o1) {
+		          return ((Comparable) ((Map.Entry) (o1)).getValue())
+		         .compareTo(((Map.Entry) (o2)).getValue());
+		     }
+		});
+		Map result = new LinkedHashMap();
 		for (Iterator it = list.iterator(); it.hasNext();) {
 			Map.Entry entry = (Map.Entry)it.next();
 			result.put(entry.getKey(), entry.getValue());
 		}
 		return result;
 	}
-    
+	
+	
+	/**
+	 * Accessors
+	 */
+	
 	public HashMap<String, Integer> getMarkerMap() {
 		return markerMap;
 	}
-
+	
 	public void setMarkerMap(HashMap<String, Integer> markerMap) {
 		this.markerMap = markerMap;
 	}
-
+	
 	public ArrayList<Integer> getNbEventPerCPU() {
 		return nbEventsPerCPU;
 	}
-
+	
 	public void setNbEventsPerCPU(ArrayList<Integer> nbEventsPerCPU) {
 		this.nbEventsPerCPU = nbEventsPerCPU;
 	}
-
+	
 	public boolean isDone() {
 		return done;
 	}
@@ -133,11 +270,11 @@ public class StateEventHandler extends TmfEventRequest<LttngEvent> {
 	}
 
 	public int getNbEvent() {
-		return nbEvent;
+		return nbEvents;
 	}
 
 	public void setNbEvent(int nbEvent) {
-		this.nbEvent = nbEvent;
+		this.nbEvents = nbEvent;
 	}
     
 }
